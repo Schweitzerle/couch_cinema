@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "419028926058",
+    "project_id": "couchcinema-b03e3",
+    "storage_bucket": "couchcinema-b03e3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419028926058:android:808d4d2d74826708985413",
+        "android_client_info": {
+          "package_name": "com.example.couchcinema.couch_cinema"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "419028926058-4legaj9jpkus4pv18dmpcdm8m6e2hl9h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqgKnwzH8FuuQCmw8oFPwkl_bREO1GRDc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "419028926058-4legaj9jpkus4pv18dmpcdm8m6e2hl9h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
