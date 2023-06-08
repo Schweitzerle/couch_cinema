@@ -1,3 +1,4 @@
+import 'package:couch_cinema/description_series.dart';
 import 'package:couch_cinema/screens/all_rated_series.dart';
 import 'package:couch_cinema/screens/all_watchlist_movies.dart';
 import 'package:couch_cinema/utils/text.dart';
@@ -59,14 +60,7 @@ class RatedSeries extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Description(
-                          name: name,
-                          description: series['overview'],
-                          bannerURL: 'https://image.tmdb.org/t/p/w500${series['backdrop_path']}',
-                          posterURL: 'https://image.tmdb.org/t/p/w500${series['backdrop_path']}',
-                          vote: series['vote_average'].toString(),
-                          launchOn: series['first_air_date'],
-                        ),
+                        builder: (context) => DescriptionSeries(seriesID: ratedSeries[index]['id'], isMovie: false)
                       ),
                     );
                   },

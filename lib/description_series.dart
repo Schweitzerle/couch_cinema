@@ -6,24 +6,24 @@ import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
 
-class DescriptionMovies extends StatefulWidget {
-  final int movieID;
+class DescriptionSeries extends StatefulWidget {
+  final int seriesID;
   late bool isMovie;
 
-  DescriptionMovies({super.key, required this.movieID, required this.isMovie});
+  DescriptionSeries({Key? key, required this.seriesID, required this.isMovie})
+      : super(key: key);
 
   @override
-  _DescriptionState createState() => _DescriptionState();
+  _DescriptionSeriesState createState() => _DescriptionSeriesState();
 }
 
-class _DescriptionState extends State<DescriptionMovies> {
+class _DescriptionSeriesState extends State<DescriptionSeries> {
   Map<String, dynamic> dataColl = {};
   late Future<String?> sessionID;
-  late String apiKey;
+  String? apiKey;
   double voteAverage = 0;
   String title = '';
   String posterUrl = '';
@@ -31,12 +31,13 @@ class _DescriptionState extends State<DescriptionMovies> {
   String launchOn = '';
   String description = '';
   int id = 0;
+  bool inProduction = false;
   int revenue = 0;
-  int runtime = 0;
+  int numberOfEpisodes = 0;
+  int numberOfSeasons = 0;
   String status = '';
   String tagline = '';
-  int budget = 0;
-  double initRaring= 0;
+  String type = '';
 
   @override
   void initState() {
@@ -47,10 +48,9 @@ class _DescriptionState extends State<DescriptionMovies> {
   }
 
   fetchData() async {
-    String? sessionId = await sessionID;
-    int ID = widget.movieID;
+    int ID = widget.seriesID;
     final url = Uri.parse(
-        'https://api.themoviedb.org/3/movie/$ID.?api_key=$apiKey&session_id=$sessionId');
+        'https://api.themoviedb.org/3/tv/$ID?api_key=$apiKey&session_id=$sessionID');
 
     final response = await http.get(url);
 
@@ -58,32 +58,27 @@ class _DescriptionState extends State<DescriptionMovies> {
       final data = json.decode(response.body);
       setState(() {
         dataColl = data;
-        voteAverage = dataColl['vote_average'];
-        title = dataColl['original_title'];
-
-        posterUrl = 'https://image.tmdb.org/t/p/w500' + dataColl['poster_path'];
-        bannerUrl =
-            'https://image.tmdb.org/t/p/w500' + dataColl['backdrop_path'];
-        launchOn = dataColl['release_date'];
-        description = dataColl['overview'];
-        id = dataColl['id'];
-        revenue = dataColl['id'];
-        runtime = dataColl['runtime'];
-        status = dataColl['status'];
-        tagline = dataColl['tagline'];
-        budget = dataColl['budget'];
+        voteAverage = dataColl['vote_average'] ?? 0.0;
+        title = dataColl['original_name'] ?? '';
+        bannerUrl = 'https://image.tmdb.org/t/p/w500' + (dataColl['backdrop_path'] ?? '');
+        launchOn = dataColl['first_air_date'] ?? '';
+        description = dataColl['overview'] ?? '';
+        id = dataColl['id'] ?? 0;
+        inProduction = dataColl['in_production'] ?? '';
+        numberOfEpisodes = dataColl['number_of_episodes'] ?? 0;
+        numberOfSeasons = dataColl['number_of_seasons'] ?? 0;
+        type = dataColl['type'] ?? '';
+        status = dataColl['status'] ?? '';
+        tagline = dataColl['tagline'] ?? '';
       });
     } else {
       throw Exception('Failed to fetch data');
     }
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
-    // Extract the vote_average
+
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -99,7 +94,7 @@ class _DescriptionState extends State<DescriptionMovies> {
               child: Stack(
                 children: [
                   Image.network(
-                    bannerUrl,
+                    'https://image.tmdb.org/t/p/w500' + (dataColl['backdrop_path'] ?? ''),
                     fit: BoxFit.cover,
                     color: Color.fromRGBO(0, 0, 0, 0.6),
                     colorBlendMode: BlendMode.darken,
@@ -118,7 +113,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title != null ? title : 'Not Loaded',
+                    title ?? 'Not Loaded',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -139,7 +134,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(10),
                               child: Image.network(
-                                posterUrl,
+                                'https://image.tmdb.org/t/p/w500' + (dataColl['poster_path'] ?? ''),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -152,8 +147,8 @@ class _DescriptionState extends State<DescriptionMovies> {
                               height: 60,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color:
-                                PopularSeries.getCircleColor(voteAverage),
+                                color: PopularSeries.getCircleColor(
+                                    voteAverage),
                               ),
                               child: Center(
                                 child: Text(
@@ -183,6 +178,14 @@ class _DescriptionState extends State<DescriptionMovies> {
                           ),
                           SizedBox(height: 10),
                           Text(
+                            'Type: $type',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
                             'Status: $status',
                             style: TextStyle(
                               color: Colors.white,
@@ -191,7 +194,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                           ),
                           SizedBox(height: 10),
                           Text(
-                            'Release: $launchOn',
+                            'In production: ' + inProduction.toString(),
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -199,7 +202,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                           ),
                           SizedBox(height: 10),
                           Text(
-                            'Runtime: $runtime minutes',
+                            'Release: ' + launchOn ?? '',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -207,15 +210,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                           ),
                           SizedBox(height: 10),
                           Text(
-                            'Budget: \$${budget.toString()}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Revenue: \$${revenue.toString()}',
+                            'Seasons: $numberOfSeasons ($numberOfEpisodes Episodes)',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -227,7 +222,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                   ),
                   SizedBox(height: 15),
                   Text(
-                    description,
+                    description ?? '',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -240,10 +235,7 @@ class _DescriptionState extends State<DescriptionMovies> {
           Positioned(
             bottom: 30,
             right: 30,
-            child: FoldableOptions(
-              id: id,
-              isMovie: true,
-            ),
+            child: FoldableOptions(id: id, isMovie: false,),
           ),
         ],
       ),
@@ -251,19 +243,16 @@ class _DescriptionState extends State<DescriptionMovies> {
   }
 }
 
-class FoldableOptions extends StatefulWidget {
+  class FoldableOptions extends StatefulWidget {
   final int id;
   final bool isMovie;
 
-
   const FoldableOptions({super.key, required this.id, required this.isMovie});
-
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
 }
 
-class _FoldableOptionsState extends State<FoldableOptions>
-    with SingleTickerProviderStateMixin {
+class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProviderStateMixin {
   final List<IconData> options = [
     Icons.list_alt,
     Icons.bookmark_border,
@@ -277,16 +266,11 @@ class _FoldableOptionsState extends State<FoldableOptions>
   late Animation<Alignment> secondAnim;
   late Animation<Alignment> thirdAnim;
 
-  double rating = 0.0;
-  double initialRating = 0.0;
-
   late Animation<double> verticalPadding;
   late AnimationController controller;
   final duration = Duration(milliseconds: 190);
 
   bool isAddedToWatchlist = false;
-  bool isRated = false;
-
 
   Widget getItem(IconData source, VoidCallback onTap) {
     final size = 45.0;
@@ -335,155 +319,6 @@ class _FoldableOptionsState extends State<FoldableOptions>
     );
   }
 
-  void showRatingDialog(BuildContext context) {
-    getUserMovieRating(widget.id);
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Rate This Movie',
-            style: TextStyle(color: Colors.white, fontSize: 22),
-          ),
-          backgroundColor: Colors.black,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Rating bar
-                  RatingBar.builder(
-                    initialRating: initialRating,
-                    minRating: 1,
-                    direction: Axis.vertical,
-                    allowHalfRating: true,
-                    glowColor: Colors.pink,
-                    glow: true,
-                    unratedColor: Color(0xff270140),
-                    itemCount: 10,
-                    itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                    itemBuilder: (context, _) => Icon(
-                      CupertinoIcons.film,
-                      color: Color(0xffd6069b),
-                    ),
-                    onRatingUpdate: (updatedRating) {
-                      rating = updatedRating;
-                      print(updatedRating);
-                    },
-                  )
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Logic to submit the rating
-                submitRating(context, rating);
-              },
-              child: Text(
-                'Submit',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<double?> getUserMovieRating(int movieId) async {
-    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-
-    String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
-
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(apiKey, readAccToken),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
-
-    List<dynamic> allRatedMovies = [];
-    int ratedMoviesPage = 1;
-    bool hasMoreRatedMoviesPages = true;
-
-    while (hasMoreRatedMoviesPages) {
-      Map<dynamic, dynamic> ratedMoviesResults =
-      await tmdbWithCustLogs.v3.account.getRatedMovies(
-        sessionId!,
-        accountId!,
-        page: ratedMoviesPage,
-      );
-      List<dynamic> ratedMovies = ratedMoviesResults['results'];
-
-      allRatedMovies.addAll(ratedMovies);
-
-      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
-          ratedMovies.isEmpty) {
-        hasMoreRatedMoviesPages = false;
-      } else {
-        ratedMoviesPage++;
-      }
-    }
-
-    for (var movie in allRatedMovies) {
-      if (movie['id'] == movieId) {
-        initialRating = movie['rating'];
-        isRated = true;
-        return movie['rating'];
-      }
-    }
-    return null;
-  }
-
-  void submitRating(BuildContext context, double rating) async {
-    // Get the session ID and account ID
-    String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
-
-    // Create an instance of TMDB with the required API key and session ID
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
-
-    // Get the movie ID and rating from the state
-    int movieId = widget.id;
-
-    // Submit the rating
-    try {
-      await tmdbWithCustLogs.v3.movies
-          .rateMovie(movieId, rating, sessionId: sessionId);
-
-      // Show a success message or perform any other action after successful rating
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Rating submitted successfully'),
-        ),
-      );
-    } catch (e) {
-      // Show an error message or perform any other action on error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to submit rating'),
-        ),
-      );
-    }
-
-    Navigator.of(context).pop();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -502,9 +337,11 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     verticalPadding = Tween<double>(begin: 0, end: 26).animate(anim);
 
-    print('Rating: ' + initialRating.toString());
-    fetchWatchlist();
+      fetchWatchlist();
   }
+
+
+
 
   Future<void> fetchWatchlist() async {
     int? accountId = await accountID;
@@ -520,8 +357,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
     bool hasMoreSeriesWatchlistPages = true;
 
     while (hasMoreSeriesWatchlistPages) {
-      Map<dynamic, dynamic> watchlistResults =
-      await tmdbWithCustLogs.v3.account.getTvShowWatchList(
+      Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
         sessionId!,
         accountId!,
         page: watchlistSeriesPage,
@@ -530,8 +366,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
       allWatchlistSeries.addAll(watchlistSeries);
 
-      if (watchlistSeriesPage == watchlistResults['total_pages'] ||
-          watchlistSeries.isEmpty) {
+      if (watchlistSeriesPage == watchlistResults['total_pages'] || watchlistSeries.isEmpty) {
         hasMoreSeriesWatchlistPages = false;
       } else {
         watchlistSeriesPage++;
@@ -544,8 +379,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
     bool hasMoreWatchlistPages = true;
 
     while (hasMoreWatchlistPages) {
-      Map<dynamic, dynamic> watchlistResults =
-      await tmdbWithCustLogs.v3.account.getMovieWatchList(
+      Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
         sessionId!,
         accountId!,
         page: watchlistPage,
@@ -554,8 +388,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
       allWatchlistMovies.addAll(watchlistMovies);
 
-      if (watchlistPage == watchlistResults['total_pages'] ||
-          watchlistMovies.isEmpty) {
+      if (watchlistPage == watchlistResults['total_pages'] || watchlistMovies.isEmpty) {
         hasMoreWatchlistPages = false;
       } else {
         watchlistPage++;
@@ -583,6 +416,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
     });
   }
 
+
   void toggleWatchlist() {
     setState(() {
       isAddedToWatchlist = !isAddedToWatchlist;
@@ -594,29 +428,26 @@ class _FoldableOptionsState extends State<FoldableOptions>
       // Remove from watchlist logic
       removeFromWatchlist();
     }
+
   }
+
 
   Future<void> addToWatchlist() async {
     // Implement the logic to add the movie/TV show to the user's watchlist
     int? accountId = await accountID;
     String? sessionId = await sessionID;
-    TMDB tmdbWithCustLogs = TMDB(
-        ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken() ),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-    tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!,
-        widget.id, widget.isMovie ? MediaType.movie : MediaType.tv);
+    tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!, widget.id, widget.isMovie ? MediaType.movie: MediaType.tv);
   }
 
   Future<void> removeFromWatchlist() async {
     // Implement the logic to remove the movie/TV show from the user's watchlist
     int? accountId = await accountID;
     String? sessionId = await sessionID;
-    TMDB tmdbWithCustLogs = TMDB(
-        ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken() ),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-    tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!,
-        widget.id, widget.isMovie ? MediaType.movie : MediaType.tv,
-        shouldAdd: false);
+    tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!, widget.id, widget.isMovie ? MediaType.movie: MediaType.tv, shouldAdd: false);
   }
 
   @override
@@ -642,8 +473,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
               Align(
                 alignment: secondAnim.value,
                 child: Container(
-                  padding:
-                  EdgeInsets.only(left: 37, top: verticalPadding.value),
+                  padding: EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
                     isAddedToWatchlist ? Icons.bookmark : Icons.bookmark_border,
                     toggleWatchlist,
@@ -652,31 +482,21 @@ class _FoldableOptionsState extends State<FoldableOptions>
               ),
               Align(
                 alignment: thirdAnim.value,
-                child: Container(
-                  padding:
-                  EdgeInsets.only(left: 37, top: verticalPadding.value),
-                  child: getItem(
-                    isRated ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                        () {
-                      //Handle third button tap
-                          getUserMovieRating(widget.id);
-                      showRatingDialog(context);
-                    },
-                  ),
+                child: getItem(
+                  options.elementAt(2),
+                      () {
+                    // Handle third button tap
+                  },
                 ),
               ),
               Align(
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: () {
-                    controller.isCompleted
-                        ? controller.reverse()
-                        : controller.forward();
+                    controller.isCompleted ? controller.reverse() : controller.forward();
                   },
                   child: buildPrimaryItem(
-                    controller.isCompleted || controller.isAnimating
-                        ? Icons.close
-                        : Icons.add,
+                    controller.isCompleted || controller.isAnimating ? Icons.close : Icons.add,
                         () {
                       // Handle primary button tap
                     },
@@ -689,4 +509,5 @@ class _FoldableOptionsState extends State<FoldableOptions>
       ),
     );
   }
+
 }

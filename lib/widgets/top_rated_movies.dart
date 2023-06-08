@@ -9,6 +9,8 @@ class TopRatedMovies extends StatelessWidget {
 
   const TopRatedMovies({Key? key, required this.topRatedMovies}) : super(key: key);
 
+
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -29,14 +31,7 @@ class TopRatedMovies extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Description(
-                          name: topRatedMovies[index]['title'],
-                          description: topRatedMovies[index]['overview'],
-                          bannerURL: 'https://image.tmdb.org/t/p/w500' + topRatedMovies[index]['backdrop_path'],
-                          posterURL: 'https://image.tmdb.org/t/p/w500' + topRatedMovies[index]['poster_path'],
-                          vote: topRatedMovies[index]['vote_average'].toString(),
-                          launchOn: topRatedMovies[index]['release_date'],
-                        ),
+                        builder: (context) => DescriptionMovies(movieID: topRatedMovies[index]['id'], isMovie: true)
                       ),
                     );
                   },

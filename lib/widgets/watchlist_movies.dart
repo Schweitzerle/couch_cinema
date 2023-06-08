@@ -57,17 +57,7 @@ class WatchlistMovies extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Description(
-                          name: watchlistMovies[index]['original_title'],
-                          description: watchlistMovies[index]['overview'],
-                          bannerURL: 'https://image.tmdb.org/t/p/w500' +
-                              watchlistMovies[index]['backdrop_path'],
-                          posterURL: 'https://image.tmdb.org/t/p/w500' +
-                              watchlistMovies[index]['poster_path'],
-                          vote:
-                              watchlistMovies[index]['vote_average'].toString(),
-                          launchOn: watchlistMovies[index]['release_date'],
-                        ),
+                        builder: (context) => DescriptionMovies(movieID: watchlistMovies[index]['id'], isMovie: true)
                       ),
                     );
                   },

@@ -1,3 +1,4 @@
+import 'package:couch_cinema/description_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,19 +62,7 @@ class AllRatedSeriesScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Description(
-                                name: ratedSeries[index]['original_title'],
-                                description: ratedSeries[index]['overview'],
-                                bannerURL:
-                                'https://image.tmdb.org/t/p/w500' +
-                                    ratedSeries[index]['backdrop_path'],
-                                posterURL:
-                                'https://image.tmdb.org/t/p/w500' +
-                                    ratedSeries[index]['poster_path'],
-                                vote: ratedSeries[index]['vote_average']
-                                    .toString(),
-                                launchOn: ratedSeries[index]['release_date'],
-                              ),
+                              builder: (context) => DescriptionSeries(seriesID: ratedSeries[index]['id'], isMovie: false)
                             ),
                           );
                         },

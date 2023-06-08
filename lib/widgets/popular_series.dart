@@ -1,3 +1,4 @@
+import 'package:couch_cinema/description_series.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:flutter/material.dart';
 
@@ -24,21 +25,15 @@ class PopularSeries extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
                 final series = popularSeries[index];
+                Map<String, dynamic> data = series;
                 final name = series['original_name'] != null ? series['original_name'] as String : 'Loading';
-
+                print('JSON: '+ data.toString());
                 return InkWell(
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Description(
-                          name: name,
-                          description: series['overview'],
-                          bannerURL: 'https://image.tmdb.org/t/p/w500${series['backdrop_path']}',
-                          posterURL: 'https://image.tmdb.org/t/p/w500${series['backdrop_path']}',
-                          vote: series['vote_average'].toString(),
-                          launchOn: series['first_air_date'],
-                        ),
+                        builder: (context) => DescriptionSeries(seriesID: data['id'], isMovie: false)
                       ),
                     );
                   },

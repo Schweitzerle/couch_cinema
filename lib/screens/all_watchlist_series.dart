@@ -1,3 +1,4 @@
+import 'package:couch_cinema/description_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,61 +62,49 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Description(
-                                name: watchlistSeries[index]['original_title'],
-                                description: watchlistSeries[index]['overview'],
-                                bannerURL:
-                                'https://image.tmdb.org/t/p/w500' +
-                                    watchlistSeries[index]['backdrop_path'],
-                                posterURL:
-                                'https://image.tmdb.org/t/p/w500' +
-                                    watchlistSeries[index]['poster_path'],
-                                vote: watchlistSeries[index]['vote_average']
-                                    .toString(),
-                                launchOn: watchlistSeries[index]['release_date'],
-                              ),
+                              builder: (context) => DescriptionSeries(seriesID: watchlistSeries[index]['id'], isMovie: false)
                             ),
                           );
                         },
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 250,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                image: DecorationImage(
-                                  image: NetworkImage(
-                                    'https://image.tmdb.org/t/p/w500' +
-                                        watchlistSeries[index]['backdrop_path'],
+                              Container(
+                                width: 250,
+                                height: 140,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  image: DecorationImage(
+                                    image: NetworkImage(
+                                      'https://image.tmdb.org/t/p/w500' +
+                                          watchlistSeries[index]['backdrop_path'],
+                                    ),
+                                    fit: BoxFit.cover,
                                   ),
-                                  fit: BoxFit.cover,
                                 ),
-                              ),
-                              child: Align(
-                                alignment: Alignment.bottomRight,
-                                child: Container(
-                                  margin: EdgeInsets.all(1),
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: PopularSeries.getCircleColor(watchlistSeries[index]['rating']),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      watchlistSeries[index]['rating'].toString(),
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                child: Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: Container(
+                                    margin: EdgeInsets.all(1),
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: PopularSeries.getCircleColor(watchlistSeries[index]['rating']),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        watchlistSeries[index]['rating'].toString(),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
 
                             SizedBox(height: 8),
                             Container(
@@ -143,6 +132,5 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
       ),
     );
   }
-
 
 }

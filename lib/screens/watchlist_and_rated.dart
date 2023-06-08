@@ -41,7 +41,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
     // Fetch all watchlist movies from all pages
-    List<dynamic> allWatchlistSeries = [];
+    late List<dynamic> allWatchlistSeries = [];
     int watchlistSeriesPage = 1;
     bool hasMoreSeriesWatchlistPages = true;
 

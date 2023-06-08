@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:couch_cinema/description_series.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -29,6 +30,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.black, // Schwarzer Hintergrund
       body: Column(
@@ -66,6 +68,8 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
                 ),
                 itemBuilder: (context, index) {
                   final film = films[index];
+                  String? mediaType = film['media_type'];
+                  bool isMovie = mediaType == 'movie'? true: false;
                   return AnimationConfiguration.staggeredGrid(
                       position: index,
                       duration: Duration(milliseconds: 500),
@@ -75,24 +79,13 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
                         curve: Curves.fastLinearToSlowEaseIn,
                         child: FadeInAnimation(
                           child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Description(
-                                      name: film['title'] ?? film['name'],
-                                      description: film['overview'],
-                                      bannerURL:
-                                          'https://image.tmdb.org/t/p/w500${film['backdrop_path']}',
-                                      posterURL:
-                                          'https://image.tmdb.org/t/p/w200${film['poster_path']}',
-                                      vote: film['vote_average'].toString(),
-                                      launchOn: film['release_date']
-                                              ?.substring(0, 10) ??
-                                          '',
-                                    ),
-                                  ));
-                            },
+                  onTap: () {
+                  Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                  builder: (context) => isMovie? DescriptionMovies(movieID: film['id'], isMovie: isMovie): DescriptionSeries(seriesID: film['id'], isMovie: isMovie),
+                  ));
+                  },
                             child: Container(
                               margin: EdgeInsets.all(8.0),
                               decoration: BoxDecoration(

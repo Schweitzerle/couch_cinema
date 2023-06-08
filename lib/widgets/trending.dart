@@ -1,3 +1,4 @@
+
 import 'package:couch_cinema/description.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
@@ -28,14 +29,7 @@ class TrendingMovies extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Description(
-                          name: trending[index]['title'],
-                          description: trending[index]['overview'],
-                          bannerURL: 'https://image.tmdb.org/t/p/w500' + trending[index]['backdrop_path'],
-                          posterURL: 'https://image.tmdb.org/t/p/w500' + trending[index]['poster_path'],
-                          vote: trending[index]['vote_average'].toString(),
-                          launchOn: trending[index]['release_date'],
-                        ),
+                        builder: (context) => DescriptionMovies(movieID: trending[index]['id'], isMovie: true)
                       ),
                     );
                   },

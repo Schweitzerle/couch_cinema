@@ -61,19 +61,7 @@ class AllRatedMovieScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Description(
-                                name: ratedMovies[index]['original_title'],
-                                description: ratedMovies[index]['overview'],
-                                bannerURL:
-                                'https://image.tmdb.org/t/p/w500' +
-                                    ratedMovies[index]['backdrop_path'],
-                                posterURL:
-                                'https://image.tmdb.org/t/p/w500' +
-                                    ratedMovies[index]['poster_path'],
-                                vote: ratedMovies[index]['vote_average']
-                                    .toString(),
-                                launchOn: ratedMovies[index]['release_date'],
-                              ),
+                              builder: (context) => DescriptionMovies(movieID: ratedMovies[index], isMovie: true)
                             ),
                           );
                         },
