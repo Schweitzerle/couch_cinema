@@ -1,4 +1,4 @@
-import 'package:couch_cinema/screens/all_watchlist_movies.dart';
+import 'package:couch_cinema/screens/all_movies.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
@@ -28,8 +28,8 @@ class WatchlistMovies extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AllWatchlistMovieScreen(
-                        watchlistMovies: allWatchlistMovies
+                      builder: (context) => AllMoviesScreen(
+                        movies: allWatchlistMovies, title: 'WatchlistMovies',
                       ),
                     ),
                   );
@@ -84,12 +84,11 @@ class WatchlistMovies extends StatelessWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: PopularSeries.getCircleColor(
-                                    watchlistMovies[index]['vote_average']),
+                                  PopularSeries.parseDouble(watchlistMovies[index]['vote_average'])),
                               ),
                               child: Center(
                                 child: Text(
-                                  watchlistMovies[index]['vote_average']
-                                      .toString(),
+                                  watchlistMovies[index]['vote_average'].toStringAsFixed(1),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,

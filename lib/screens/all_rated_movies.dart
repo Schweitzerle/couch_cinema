@@ -61,7 +61,7 @@ class AllRatedMovieScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DescriptionMovies(movieID: ratedMovies[index], isMovie: true)
+                              builder: (context) => DescriptionMovies(movieID: ratedMovies[index]['id'], isMovie: true)
                             ),
                           );
                         },
@@ -89,11 +89,11 @@ class AllRatedMovieScreen extends StatelessWidget {
                                     height: 50,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: PopularSeries.getCircleColor(ratedMovies[index]['rating']),
+                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(ratedMovies[index]['rating'])),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        ratedMovies[index]['rating'].toString(),
+                                        ratedMovies[index]['rating'].toStringAsFixed(1),
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,

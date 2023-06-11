@@ -1,17 +1,18 @@
 import 'package:couch_cinema/description_series.dart';
 import 'package:couch_cinema/screens/all_rated_series.dart';
 import 'package:couch_cinema/screens/all_movies.dart';
+import 'package:couch_cinema/screens/all_series.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
 
 import '../description.dart';
 
-class RatedSeries extends StatelessWidget {
-  final List ratedSeries;
-  final List allRatedSeries;
+class RecommendedSeries extends StatelessWidget {
+  final List recommendedSeries;
+  final List allRecommendedSeries;
 
-  const RatedSeries({Key? key, required this.ratedSeries, required this.allRatedSeries}) : super(key: key);
+  const RecommendedSeries({Key? key, required this.recommendedSeries, required this.allRecommendedSeries}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,36 +24,40 @@ class RatedSeries extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-          const mod_Text(text: 'Series', color: Colors.white, size: 22),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AllRatedSeriesScreen(
-                      ratedSeries: allRatedSeries
+              const mod_Text(text: 'Recommended Series', color: Colors.white, size: 22),
+              ElevatedButton(
+                onPressed: () {
+                  print('Rec: '+ allRecommendedSeries.length.toString());
+                if(allRecommendedSeries.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllSeriesScreen(
+                        series: allRecommendedSeries, title: 'Recommended Series',
+                      ),
+                    ),
+                  );
+                }
+
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: Color(0xffd6069b), // Set custom background color
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10), // Set custom corner radius
                   ),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              primary: Color(0xffd6069b), // Set custom background color
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), // Set custom corner radius
+                child: Text('All'),
               ),
-            ),
-            child: Text('All Series'),
+            ],
           ),
-        ],
-      ),
           const SizedBox(height: 10),
           SizedBox(
             height: 200,
             child: ListView.builder(
-              itemCount: ratedSeries.length,
+              itemCount: recommendedSeries.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
-                final series = ratedSeries[index];
+                final series = recommendedSeries[index];
                 final name = series['original_name'] != null ? series['original_name'] as String : 'Loading';
 
                 return InkWell(
@@ -60,7 +65,7 @@ class RatedSeries extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => DescriptionSeries(seriesID: ratedSeries[index]['id'], isMovie: false)
+                          builder: (context) => DescriptionSeries(seriesID: recommendedSeries[index]['id'], isMovie: false)
                       ),
                     );
                   },
@@ -88,11 +93,11 @@ class RatedSeries extends StatelessWidget {
                               height: 50,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: PopularSeries.getCircleColor(PopularSeries.parseDouble(series['rating'])),
+                                color: PopularSeries.getCircleColor(PopularSeries.parseDouble(series['vote_average'])),
                               ),
                               child: Center(
                                 child: Text(
-                                  series['rating'].toStringAsFixed(1),
+                                  series['vote_average'].toStringAsFixed(1),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,

@@ -61,11 +61,11 @@ class PopularSeries extends StatelessWidget {
                               height: 50,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: getCircleColor(series['vote_average']),
+                                color: getCircleColor(parseDouble(series['vote_average'])),
                               ),
                               child: Center(
                                 child: Text(
-                                  series['vote_average'].toString(),
+                                  series['vote_average'].toStringAsFixed(1),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -93,6 +93,18 @@ class PopularSeries extends StatelessWidget {
       ),
     );
   }
+
+  static double parseDouble(dynamic value) {
+    if (value is int) {
+      return value.toDouble();
+    } else if (value is double) {
+      return value;
+    } else {
+      // Handle other cases, such as string representation of a number
+      return double.tryParse(value.toString()) ?? 0.0;
+    }
+  }
+
 
   static Color getCircleColor(double rating) {
     if (rating < 3.3) {

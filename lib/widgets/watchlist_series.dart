@@ -1,5 +1,6 @@
 import 'package:couch_cinema/description_series.dart';
-import 'package:couch_cinema/screens/all_watchlist_movies.dart';
+import 'package:couch_cinema/screens/all_rated_series.dart';
+import 'package:couch_cinema/screens/all_movies.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +11,7 @@ class WatchlistSeries extends StatelessWidget {
   final List watchlistSeries;
   final List allWatchlistSeries;
 
-  const WatchlistSeries({Key? key, required this.watchlistSeries, required this.allWatchlistSeries})
-      : super(key: key);
+  const WatchlistSeries({Key? key, required this.watchlistSeries, required this.allWatchlistSeries}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,14 +23,14 @@ class WatchlistSeries extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const mod_Text(text: 'Movies', color: Colors.white, size: 22),
+              const mod_Text(text: 'Series', color: Colors.white, size: 22),
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AllWatchlistMovieScreen(
-                          watchlistMovies: allWatchlistSeries
+                      builder: (context) => AllRatedSeriesScreen(
+                          ratedSeries: allWatchlistSeries
                       ),
                     ),
                   );
@@ -38,43 +38,47 @@ class WatchlistSeries extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   primary: Color(0xffd6069b), // Set custom background color
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                    BorderRadius.circular(10), // Set custom corner radius
+                    borderRadius: BorderRadius.circular(10), // Set custom corner radius
                   ),
                 ),
-                child: Text('All Movies'),
+                child: Text('All Series'),
               ),
             ],
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 270,
+            height: 200,
             child: ListView.builder(
               itemCount: watchlistSeries.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
+                final series = watchlistSeries[index];
+                final name = series['original_name'] != null ? series['original_name'] as String : 'Loading';
+
                 return InkWell(
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => DescriptionSeries(seriesID: watchlistSeries[index]['id'], isMovie: true)
+                          builder: (context) => DescriptionSeries(seriesID: watchlistSeries[index]['id'], isMovie: false)
                       ),
                     );
                   },
-                  child: SizedBox(
-                    width: 140,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    width: 250,
                     child: Column(
                       children: [
                         Container(
-                          height: 200,
+                          width: 250,
+                          height: 140,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                             image: DecorationImage(
                               image: NetworkImage(
-                                'https://image.tmdb.org/t/p/w500' +
-                                    watchlistSeries[index]['poster_path'],
+                                'https://image.tmdb.org/t/p/w500${series['backdrop_path']}',
                               ),
+                              fit: BoxFit.cover,
                             ),
                           ),
                           child: Align(
@@ -84,13 +88,11 @@ class WatchlistSeries extends StatelessWidget {
                               height: 50,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: PopularSeries.getCircleColor(
-                                    watchlistSeries[index]['vote_average']),
+                                color: PopularSeries.getCircleColor(PopularSeries.parseDouble(series['vote_average'])),
                               ),
                               child: Center(
                                 child: Text(
-                                  watchlistSeries[index]['vote_average']
-                                      .toString(),
+                                  series['vote_average'].toStringAsFixed(1),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -101,10 +103,9 @@ class WatchlistSeries extends StatelessWidget {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 10),
                         mod_Text(
-                          text: watchlistSeries[index]['original_title'] != null
-                              ? watchlistSeries[index]['original_title']
-                              : 'Loading',
+                          text: name,
                           color: Colors.white,
                           size: 14,
                         ),
@@ -119,6 +120,5 @@ class WatchlistSeries extends StatelessWidget {
       ),
     );
   }
-
 
 }

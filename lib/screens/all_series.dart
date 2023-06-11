@@ -1,4 +1,4 @@
-
+import 'package:couch_cinema/description_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,10 +8,11 @@ import '../description.dart';
 import '../utils/text.dart';
 import '../widgets/popular_series.dart';
 
-class AllWatchlistMovieScreen extends StatelessWidget {
-  final List watchlistMovies;
+class AllSeriesScreen extends StatelessWidget {
+  final List series;
+  final String title;
 
-  const AllWatchlistMovieScreen({Key? key, required this.watchlistMovies});
+  const AllSeriesScreen({Key? key, required this.series, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,7 @@ class AllWatchlistMovieScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              "Watchlist Movies",
+              title,
               style: TextStyle(
                 color: Colors.white,
               ),
@@ -47,7 +48,7 @@ class AllWatchlistMovieScreen extends StatelessWidget {
             mainAxisSpacing: 16, // Add spacing between grid items vertically
             crossAxisSpacing: 16, // Add spacing between grid items horizontally
             children: List.generate(
-              watchlistMovies.length,
+              series.length,
                   (int index) {
                 return AnimationConfiguration.staggeredGrid(
                   position: index,
@@ -62,22 +63,25 @@ class AllWatchlistMovieScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DescriptionMovies(movieID: watchlistMovies[index]['id'], isMovie: true)
+                              builder: (context) => DescriptionSeries(seriesID: series[index]['id'], isMovie: false)
                             ),
                           );
                         },
-                        child: Column(
+
+                        child: series[index]['backdrop_path'] != null
+                            ?
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                               Container(
-                                width: 140,
-                                height: 200,
+                                width: 250,
+                                height: 140,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(20),
                                   image: DecorationImage(
                                     image: NetworkImage(
                                       'https://image.tmdb.org/t/p/w500' +
-                                          watchlistMovies[index]['poster_path'],
+                                          series[index]['backdrop_path'],
                                     ),
                                     fit: BoxFit.cover,
                                   ),
@@ -90,11 +94,11 @@ class AllWatchlistMovieScreen extends StatelessWidget {
                                     height: 50,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: PopularSeries.getCircleColor(watchlistMovies[index]['vote_average']),
+                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(series[index]['vote_average'])),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        watchlistMovies[index]['vote_average'].toString(),
+                                        series[index]['vote_average'].toStringAsFixed(1),
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
@@ -111,8 +115,8 @@ class AllWatchlistMovieScreen extends StatelessWidget {
                               margin: EdgeInsets.symmetric(horizontal: 16), // Add horizontal margin
                               child: Expanded(
                                 child: mod_Text(
-                                  text: watchlistMovies[index]['original_title'] != null
-                                      ? watchlistMovies[index]['original_title']
+                                  text: series[index]['original_name'] != null
+                                      ? series[index]['original_name']
                                       : 'Loading',
                                   color: Colors.white,
                                   size: 14,
@@ -120,7 +124,8 @@ class AllWatchlistMovieScreen extends StatelessWidget {
                               ),
                             ),
                           ],
-                        ),
+                        )
+                        : Container(),
                       ),
                     ),
                   ),
@@ -132,6 +137,5 @@ class AllWatchlistMovieScreen extends StatelessWidget {
       ),
     );
   }
-
 
 }

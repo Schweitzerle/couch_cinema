@@ -12,7 +12,7 @@ import 'api/tmdb_api.dart';
 void main() {
   runApp(
     MaterialApp(
-      title: 'Translucent Login UI',
+      title: 'CouchCinema',
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
     ),

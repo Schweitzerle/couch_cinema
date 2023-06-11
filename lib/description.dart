@@ -4,6 +4,7 @@ import 'package:couch_cinema/api/tmdb_api.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
+import 'package:couch_cinema/widgets/recommendedMovies.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -38,6 +39,7 @@ class _DescriptionState extends State<DescriptionMovies> {
   int budget = 0;
   double initialRating = 0.0;
   bool isRated = false;
+  List recommendedMovies = [];
 
   @override
   void initState() {
@@ -46,11 +48,49 @@ class _DescriptionState extends State<DescriptionMovies> {
     apiKey = TMDBApiService.getApiKey();
     fetchData();
     getUserMovieRating(widget.movieID);
+    getRecommendedMovies();
+  }
+
+  Future<void> getRecommendedMovies() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    late List<dynamic> allRecommendedSeries = [];
+    int recomMoviesPage = 1;
+    bool hasMoreRecomMoviePages = true;
+
+    while (hasMoreRecomMoviePages) {
+      Map<dynamic, dynamic> watchlistResults =
+          await tmdbWithCustLogs.v3.movies.getRecommended(
+        widget.movieID,
+        page: recomMoviesPage,
+      );
+      List<dynamic> watchlistSeries = watchlistResults['results'];
+
+      allRecommendedSeries.addAll(watchlistSeries);
+
+      if (recomMoviesPage == watchlistResults['total_pages'] ||
+          watchlistSeries.isEmpty) {
+        hasMoreRecomMoviePages = false;
+      } else {
+        recomMoviesPage++;
+      }
+    }
+    setState(() {
+      recommendedMovies = allRecommendedSeries;
+    });
   }
 
   Future<void> getUserMovieRating(int movieId) async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
 
     String? sessionId = await SessionManager.getSessionId();
     int? accountId = await SessionManager.getAccountId();
@@ -66,7 +106,7 @@ class _DescriptionState extends State<DescriptionMovies> {
 
     while (hasMoreRatedMoviesPages) {
       Map<dynamic, dynamic> ratedMoviesResults =
-      await tmdbWithCustLogs.v3.account.getRatedMovies(
+          await tmdbWithCustLogs.v3.account.getRatedMovies(
         sessionId!,
         accountId!,
         page: ratedMoviesPage,
@@ -92,10 +132,7 @@ class _DescriptionState extends State<DescriptionMovies> {
         return movie['rating'];
       }
     }
-
-
   }
-
 
   fetchData() async {
     String? sessionId = await sessionID;
@@ -109,7 +146,7 @@ class _DescriptionState extends State<DescriptionMovies> {
       final data = json.decode(response.body);
       setState(() {
         dataColl = data;
-        voteAverage = dataColl['vote_average'];
+        voteAverage = PopularSeries.parseDouble(dataColl['vote_average']);
         title = dataColl['original_title'];
 
         posterUrl = 'https://image.tmdb.org/t/p/w500' + dataColl['poster_path'];
@@ -128,9 +165,6 @@ class _DescriptionState extends State<DescriptionMovies> {
       throw Exception('Failed to fetch data');
     }
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -204,11 +238,11 @@ class _DescriptionState extends State<DescriptionMovies> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color:
-                                PopularSeries.getCircleColor(voteAverage),
+                                    PopularSeries.getCircleColor(voteAverage),
                               ),
                               child: Center(
                                 child: Text(
-                                  voteAverage.toString(),
+                                  voteAverage.toStringAsFixed(2),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -276,12 +310,31 @@ class _DescriptionState extends State<DescriptionMovies> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 15),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 20),
+                        Text(
+                          'Description:',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                        RecommendedMovies(
+                            recommendedMovies: recommendedMovies.length < 10 ?  recommendedMovies :recommendedMovies.sublist(0, 10),
+                            allRecommmendedMovies: recommendedMovies)
+                      ],
                     ),
                   ),
                 ],
@@ -310,8 +363,12 @@ class FoldableOptions extends StatefulWidget {
   final bool isRated;
   final double initRating;
 
-
-  const FoldableOptions({super.key, required this.id, required this.isMovie, required this.isRated, required this.initRating});
+  const FoldableOptions(
+      {super.key,
+      required this.id,
+      required this.isMovie,
+      required this.isRated,
+      required this.initRating});
 
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
@@ -336,10 +393,9 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
   late Animation<double> verticalPadding;
   late AnimationController controller;
-  final duration = Duration(milliseconds: 190);
+  final duration = const Duration(milliseconds: 190);
 
   bool isAddedToWatchlist = false;
-
 
   Widget getItem(IconData source, VoidCallback onTap) {
     final size = 45.0;
@@ -364,7 +420,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
   }
 
   Widget buildPrimaryItem(IconData source, VoidCallback onTap) {
-    final size = 55.0;
+    final size = 45.0;
     return Container(
       width: size,
       height: size,
@@ -388,114 +444,9 @@ class _FoldableOptionsState extends State<FoldableOptions>
     );
   }
 
-  void showRatingDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Rate This Movie',
-            style: TextStyle(color: Colors.white, fontSize: 22),
-          ),
-          backgroundColor: Colors.black,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Rating bar
-                  RatingBar.builder(
-                    initialRating: widget.initRating,
-                    minRating: 1,
-                    direction: Axis.vertical,
-                    allowHalfRating: true,
-                    glowColor: Colors.pink,
-                    glow: true,
-                    unratedColor: Color(0xff270140),
-                    itemCount: 10,
-                    itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                    itemBuilder: (context, _) => Icon(
-                      CupertinoIcons.film,
-                      color: Color(0xffd6069b),
-                    ),
-                    onRatingUpdate: (updatedRating) {
-                      rating = updatedRating;
-                      print(updatedRating);
-                    },
-                  )
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Logic to submit the rating
-                submitRating(context, rating);
-              },
-              child: Text(
-                'Submit',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-
-  void submitRating(BuildContext context, double rating) async {
-    // Get the session ID and account ID
-    String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
-
-    // Create an instance of TMDB with the required API key and session ID
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
-
-    // Get the movie ID and rating from the state
-    int movieId = widget.id;
-
-    // Submit the rating
-    try {
-      await tmdbWithCustLogs.v3.movies
-          .rateMovie(movieId, rating, sessionId: sessionId);
-
-      // Show a success message or perform any other action after successful rating
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Rating submitted successfully'),
-        ),
-      );
-    } catch (e) {
-      // Show an error message or perform any other action on error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to submit rating'),
-        ),
-      );
-    }
-
-    Navigator.of(context).pop();
-  }
-
   @override
   void initState() {
     super.initState();
-    fetchWatchlist();
     controller = AnimationController(vsync: this, duration: duration);
 
     final anim = CurvedAnimation(parent: controller, curve: Curves.linear);
@@ -506,12 +457,11 @@ class _FoldableOptionsState extends State<FoldableOptions>
         Tween<Alignment>(begin: Alignment.centerRight, end: Alignment.topLeft)
             .animate(anim);
     thirdAnim = Tween<Alignment>(
-        begin: Alignment.centerRight, end: Alignment.centerLeft)
+            begin: Alignment.centerRight, end: Alignment.centerLeft)
         .animate(anim);
 
-    verticalPadding = Tween<double>(begin: 0, end: 26).animate(anim);
-
-
+    verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
+    fetchWatchlist();
   }
 
   Future<void> fetchWatchlist() async {
@@ -529,7 +479,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     while (hasMoreSeriesWatchlistPages) {
       Map<dynamic, dynamic> watchlistResults =
-      await tmdbWithCustLogs.v3.account.getTvShowWatchList(
+          await tmdbWithCustLogs.v3.account.getTvShowWatchList(
         sessionId!,
         accountId!,
         page: watchlistSeriesPage,
@@ -553,7 +503,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     while (hasMoreWatchlistPages) {
       Map<dynamic, dynamic> watchlistResults =
-      await tmdbWithCustLogs.v3.account.getMovieWatchList(
+          await tmdbWithCustLogs.v3.account.getMovieWatchList(
         sessionId!,
         accountId!,
         page: watchlistPage,
@@ -640,18 +590,21 @@ class _FoldableOptionsState extends State<FoldableOptions>
             children: <Widget>[
               Align(
                 alignment: firstAnim.value,
-                child: getItem(
-                  options.elementAt(0),
-                      () {
-                    // Handle first button tap
-                  },
+                child: Container(
+                  padding: EdgeInsets.only(left: 37),
+                  child: getItem(
+                    options.elementAt(0),
+                    () {
+                      // Handle first button tap
+                    },
+                  ),
                 ),
               ),
               Align(
                 alignment: secondAnim.value,
                 child: Container(
                   padding:
-                  EdgeInsets.only(left: 37, top: verticalPadding.value),
+                      EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
                     isAddedToWatchlist ? Icons.bookmark : Icons.bookmark_border,
                     toggleWatchlist,
@@ -662,12 +615,15 @@ class _FoldableOptionsState extends State<FoldableOptions>
                 alignment: thirdAnim.value,
                 child: Container(
                   padding:
-                  EdgeInsets.only(left: 37, top: verticalPadding.value),
+                      EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
-                    widget.isRated ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                        () {
+                    widget.isRated
+                        ? CupertinoIcons.star_fill
+                        : CupertinoIcons.star,
+                    () {
                       //Handle third button tap
-                      showRatingDialog(context);
+                      MovieDialogHelper.showMovieRatingDialog(
+                          context, widget.initRating, rating, widget.id);
                     },
                   ),
                 ),
@@ -684,7 +640,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                     controller.isCompleted || controller.isAnimating
                         ? Icons.close
                         : Icons.add,
-                        () {
+                    () {
                       // Handle primary button tap
                     },
                   ),
@@ -695,5 +651,168 @@ class _FoldableOptionsState extends State<FoldableOptions>
         },
       ),
     );
+  }
+}
+
+class MovieDialogHelper {
+  static void showMovieRatingDialog(
+      BuildContext context, double initRating, double updRating, int id) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shadowColor: Color(0xff690257),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            'Rate This Movie',
+            style: TextStyle(color: Colors.white, fontSize: 22),
+          ),
+          backgroundColor: Color(0xFF1f1f1f),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Rating bar
+                  FittedBox(
+                      fit: BoxFit.fitWidth,
+                      child: RatingBar.builder(
+                        itemSize: 22,
+                        initialRating: initRating,
+                        minRating: 1,
+                        direction: Axis.horizontal,
+                        allowHalfRating: true,
+                        glowColor: Colors.pink,
+                        glow: true,
+                        unratedColor: Color(0xff690257),
+                        itemCount: 10,
+                        itemPadding: EdgeInsets.symmetric(horizontal: 1.5),
+                        itemBuilder: (context, _) => Icon(
+                          CupertinoIcons.film,
+                          color: Color(0xffd6069b),
+                        ),
+                        onRatingUpdate: (updatedRating) {
+                          updRating = updatedRating;
+                          print(updatedRating);
+                        },
+                      ))
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Logic to submit the rating
+                deleteMovieRating(context, updRating, id);
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Delete',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Logic to submit the rating
+                submitMovieRating(context, updRating, id);
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Submit',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  static void submitMovieRating(
+      BuildContext context, double rating, int id) async {
+    // Get the session ID and account ID
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+    // Create an instance of TMDB with the required API key and session ID
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    // Get the movie ID and rating from the state
+    int movieId = id;
+
+    // Submit the rating
+    try {
+      await tmdbWithCustLogs.v3.movies
+          .rateMovie(movieId, rating, sessionId: sessionId);
+
+      // Show a success message or perform any other action after successful rating
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Rating submitted successfully'),
+        ),
+      );
+    } catch (e) {
+      // Show an error message or perform any other action on error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit rating'),
+        ),
+      );
+    }
+
+    Navigator.of(context).pop();
+  }
+
+  static void deleteMovieRating(
+      BuildContext context, double rating, int id) async {
+    // Get the session ID and account ID
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+    // Create an instance of TMDB with the required API key and session ID
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    // Get the movie ID and rating from the state
+    int movieId = id;
+
+    // Submit the rating
+    try {
+      await tmdbWithCustLogs.v3.movies
+          .deleteRating(movieId, sessionId: sessionId);
+
+      // Show a success message or perform any other action after successful rating
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Rating deleted successfully'),
+        ),
+      );
+    } catch (e) {
+      // Show an error message or perform any other action on error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete rating'),
+        ),
+      );
+    }
+
+    Navigator.of(context).pop();
   }
 }

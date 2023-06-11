@@ -4,6 +4,7 @@ import 'package:couch_cinema/api/tmdb_api.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
+import 'package:couch_cinema/widgets/recommended_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -41,6 +42,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   String type = '';
   double initialRating = 0.0;
   bool isRated = false;
+  List recommendedSeries = [];
 
   @override
   void initState() {
@@ -49,6 +51,41 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     apiKey = TMDBApiService.getApiKey();
     fetchData();
     getUserSeriesRating(widget.seriesID);
+    getRecommendedSeries();
+  }
+
+  Future<void> getRecommendedSeries() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    late List<dynamic> allRecommendedSeries = [];
+    int recomMoviesPage = 1;
+    bool hasMoreRecomMoviePages = true;
+
+    while (hasMoreRecomMoviePages) {
+      Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.tv.getRecommendations(
+        widget.seriesID,
+        page: recomMoviesPage,
+      );
+      List<dynamic> watchlistSeries = watchlistResults['results'];
+
+      allRecommendedSeries.addAll(watchlistSeries);
+
+      if (recomMoviesPage == watchlistResults['total_pages'] || watchlistSeries.isEmpty) {
+        hasMoreRecomMoviePages = false;
+      } else {
+        recomMoviesPage++;
+      }
+    }
+    setState(() {
+      recommendedSeries = allRecommendedSeries;
+    });
   }
 
   Future<void> getUserSeriesRating(int movieId) async {
@@ -110,7 +147,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
       final data = json.decode(response.body);
       setState(() {
         dataColl = data;
-        voteAverage = dataColl['vote_average'] ?? 0.0;
+        voteAverage = PopularSeries.parseDouble(dataColl['vote_average']) ?? 0.0;
         title = dataColl['original_name'] ?? '';
         bannerUrl = 'https://image.tmdb.org/t/p/w500' + (dataColl['backdrop_path'] ?? '');
         launchOn = dataColl['first_air_date'] ?? '';
@@ -164,9 +201,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child:  Text(
+                   Text(
                       title ?? 'Not Loaded',
                       style: TextStyle(
                         color: Colors.white,
@@ -174,7 +209,6 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
                   SizedBox(height: 10),
                   Row(
                     children: [
@@ -207,7 +241,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                               ),
                               child: Center(
                                 child: Text(
-                                  voteAverage.toString(),
+                                  voteAverage.toStringAsFixed(1),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -275,12 +309,29 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 15),
-                  Text(
-                    description ?? '',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 20),
+                        Text(
+                          'Description:',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                        RecommendedSeries(recommendedSeries: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allRecommendedSeries: recommendedSeries)
+                      ],
                     ),
                   ),
                 ],
@@ -354,7 +405,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
   }
 
   Widget buildPrimaryItem(IconData source, VoidCallback onTap) {
-    final size = 55.0;
+    final size = 45.0;
     return Container(
       width: size,
       height: size,
@@ -394,8 +445,8 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
 
     // Submit the rating
     try {
-      await tmdbWithCustLogs.v3.movies
-          .rateMovie(movieId, rating, sessionId: sessionId);
+      await tmdbWithCustLogs.v3.tv
+          .rateTvShow(movieId, rating, sessionId: sessionId);
 
       // Show a success message or perform any other action after successful rating
       ScaffoldMessenger.of(context).showSnackBar(
@@ -415,12 +466,51 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
     Navigator.of(context).pop();
   }
 
+  void deleteRating(BuildContext context, double rating) async {
+    // Get the session ID and account ID
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+    // Create an instance of TMDB with the required API key and session ID
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    // Get the movie ID and rating from the state
+    int movieId = widget.id;
+
+    // Submit the rating
+    try {
+      await tmdbWithCustLogs.v3.tv
+          .deleteRating(movieId, sessionId: sessionId);
+
+      // Show a success message or perform any other action after successful rating
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Rating deleted successfully'),
+        ),
+      );
+    } catch (e) {
+      // Show an error message or perform any other action on error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete rating'),
+        ),
+      );
+    }
+
+    Navigator.of(context).pop();
+  }
+
+
+
   @override
   void initState() {
     super.initState();
     controller = AnimationController(vsync: this, duration: duration);
 
-    final anim = CurvedAnimation(parent: controller, curve: Curves.linear);
+    final anim = CurvedAnimation(parent: controller, curve: Curves.linearToEaseOut);
     firstAnim =
         Tween<Alignment>(begin: Alignment.centerRight, end: Alignment.topRight)
             .animate(anim);
@@ -431,7 +521,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
         begin: Alignment.centerRight, end: Alignment.centerLeft)
         .animate(anim);
 
-    verticalPadding = Tween<double>(begin: 0, end: 26).animate(anim);
+    verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
 
       fetchWatchlist();
   }
@@ -546,11 +636,13 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shadowColor: Color(0xff690257),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
-            'Rate This Series',
+            'Rate This Movie',
             style: TextStyle(color: Colors.white, fontSize: 22),
           ),
-          backgroundColor: Colors.black,
+          backgroundColor: Color(0xFF1f1f1f),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -558,24 +650,28 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Rating bar
-                  RatingBar.builder(
-                    initialRating: widget.initRating,
-                    minRating: 1,
-                    direction: Axis.vertical,
-                    allowHalfRating: true,
-                    glowColor: Colors.pink,
-                    glow: true,
-                    unratedColor: Color(0xff270140),
-                    itemCount: 10,
-                    itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                    itemBuilder: (context, _) => Icon(
-                      CupertinoIcons.film,
-                      color: Color(0xffd6069b),
-                    ),
-                    onRatingUpdate: (updatedRating) {
-                      rating = updatedRating;
-                      print(updatedRating);
-                    },
+                  FittedBox(
+                      fit: BoxFit.fitWidth,
+                      child: RatingBar.builder(
+                        itemSize: 22,
+                        initialRating: widget.initRating,
+                        minRating: 1,
+                        direction: Axis.horizontal,
+                        allowHalfRating: true,
+                        glowColor: Colors.pink,
+                        glow: true,
+                        unratedColor: Color(0xff690257),
+                        itemCount: 10,
+                        itemPadding: EdgeInsets.symmetric(horizontal: 1.5),
+                        itemBuilder: (context, _) => Icon(
+                          CupertinoIcons.film,
+                          color: Color(0xffd6069b),
+                        ),
+                        onRatingUpdate: (updatedRating) {
+                          rating = updatedRating;
+                          print(updatedRating);
+                        },
+                      )
                   )
                 ],
               ),
@@ -585,10 +681,11 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
             TextButton(
               onPressed: () {
                 // Logic to submit the rating
-                submitRating(context, rating);
+                deleteRating(context, rating);
+                Navigator.of(context).pop();
               },
               child: Text(
-                'Submit',
+                'Delete',
                 style: TextStyle(color: Colors.white, fontSize: 18),
               ),
             ),
@@ -598,6 +695,17 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
               },
               child: Text(
                 'Cancel',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Logic to submit the rating
+                submitRating(context, rating);
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Submit',
                 style: TextStyle(color: Colors.white, fontSize: 18),
               ),
             ),
@@ -622,11 +730,15 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
             children: <Widget>[
               Align(
                 alignment: firstAnim.value,
-                child: getItem(
-                  options.elementAt(0),
-                      () {
-                    // Handle first button tap
-                  },
+                child: Container(
+                  padding: EdgeInsets.only(left: 37),
+                  child:
+                  getItem(
+                    options.elementAt(0),
+                        () {
+                      // Handle first button tap
+                    },
+                  ),
                 ),
               ),
               Align(

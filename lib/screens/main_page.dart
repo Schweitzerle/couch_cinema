@@ -34,6 +34,7 @@ class _MainScreenState extends State<MainScreen> {
       trendingMovies = trendingResults['results'];
       topratedMovies = topratedResults['results'];
       seriesPopular = seriesPopularResults['results'];
+      print(seriesPopular.toString());
     });
   }
 

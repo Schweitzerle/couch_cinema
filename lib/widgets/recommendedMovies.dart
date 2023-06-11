@@ -6,11 +6,12 @@ import 'package:flutter/material.dart';
 
 import '../description.dart';
 
-class RatedMovies extends StatelessWidget {
-  final List ratedMovies;
-  final List allRatedMovies;
+class RecommendedMovies extends StatelessWidget {
+  final List recommendedMovies;
+  final List allRecommmendedMovies;
 
-  const RatedMovies({Key? key, required this.ratedMovies, required this.allRatedMovies}) : super(key: key);
+  const RecommendedMovies({Key? key, required this.recommendedMovies, required this.allRecommmendedMovies}) : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +23,14 @@ class RatedMovies extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const mod_Text(text: 'Movies', color: Colors.white, size: 22),
+              const mod_Text(text: 'Recommended Movies', color: Colors.white, size: 22),
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AllRatedMovieScreen(
-                          ratedMovies: allRatedMovies
+                      builder: (context) => AllMoviesScreen(
+                          movies: allRecommmendedMovies, title: 'Recommended Movies',
                       ),
                     ),
                   );
@@ -40,7 +41,7 @@ class RatedMovies extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10), // Set custom corner radius
                   ),
                 ),
-                child: Text('All Movies'),
+                child: Text('All'),
               ),
               ],
           ),
@@ -48,7 +49,7 @@ class RatedMovies extends StatelessWidget {
               SizedBox(
                 height: 270,
                 child: ListView.builder(
-                  itemCount: ratedMovies.length,
+                  itemCount: recommendedMovies.length,
                   scrollDirection: Axis.horizontal,
                   itemBuilder: (context, index) {
                     return InkWell(
@@ -56,7 +57,7 @@ class RatedMovies extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DescriptionMovies(movieID: ratedMovies[index]['id'], isMovie: true,
+                            builder: (context) => DescriptionMovies(movieID: recommendedMovies[index]['id'], isMovie: true,
                             ),
                           ),
                         );
@@ -72,7 +73,7 @@ class RatedMovies extends StatelessWidget {
                                 image: DecorationImage(
                                   image: NetworkImage(
                                     'https://image.tmdb.org/t/p/w500' +
-                                        ratedMovies[index]['poster_path'],
+                                        recommendedMovies[index]['poster_path'],
                                   ),
                                 ),
                               ),
@@ -84,11 +85,11 @@ class RatedMovies extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: PopularSeries.getCircleColor(
-                                      PopularSeries.parseDouble(ratedMovies[index]['rating'])),
+                                      PopularSeries.parseDouble(recommendedMovies[index]['vote_average'])),
                                   ),
                                   child: Center(
                                     child: Text(
-                                      ratedMovies[index]['rating'].toStringAsFixed(1),
+                                      recommendedMovies[index]['vote_average'].toStringAsFixed(1),
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
@@ -100,8 +101,8 @@ class RatedMovies extends StatelessWidget {
                               ),
                             ),
                             mod_Text(
-                              text: ratedMovies[index]['original_title'] != null
-                                  ? ratedMovies[index]['original_title']
+                              text: recommendedMovies[index]['original_title'] != null
+                                  ? recommendedMovies[index]['original_title']
                                   : 'Loading',
                               color: Colors.white,
                               size: 14,

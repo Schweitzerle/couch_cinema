@@ -90,11 +90,11 @@ class AllRatedSeriesScreen extends StatelessWidget {
                                     height: 50,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: PopularSeries.getCircleColor(ratedSeries[index]['rating']),
+                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(ratedSeries[index]['vote_average'])),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        ratedSeries[index]['rating'].toString(),
+                                        ratedSeries[index]['vote_average'].toStringAsFixed(1),
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
@@ -111,8 +111,8 @@ class AllRatedSeriesScreen extends StatelessWidget {
                               margin: EdgeInsets.symmetric(horizontal: 16), // Add horizontal margin
                               child: Expanded(
                                 child: mod_Text(
-                                  text: ratedSeries[index]['original_title'] != null
-                                      ? ratedSeries[index]['original_title']
+                                  text: ratedSeries[index]['original_name'] != null
+                                      ? ratedSeries[index]['original_name']
                                       : 'Loading',
                                   color: Colors.white,
                                   size: 14,

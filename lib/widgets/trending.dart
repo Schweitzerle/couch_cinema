@@ -36,7 +36,6 @@ class TrendingMovies extends StatelessWidget {
                   child: trending[index]['title'] != null
                       ? SizedBox(
                     width: 140,
-                    child: Expanded(
                       child: Column(
                         children: [
                           Container(
@@ -56,11 +55,11 @@ class TrendingMovies extends StatelessWidget {
                                 height: 50,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: PopularSeries.getCircleColor(trending[index]['vote_average']),
+                                  color: PopularSeries.getCircleColor(PopularSeries.parseDouble(trending[index]['vote_average'])),
                                 ),
                                 child: Center(
                                   child: Text(
-                                    trending[index]['vote_average'].toString(),
+                                    trending[index]['vote_average'].toStringAsFixed(1),
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
@@ -78,8 +77,7 @@ class TrendingMovies extends StatelessWidget {
                           ),
                         ],
                       ),
-                    ),
-                  )
+                    )
                       : Container(),
                 );
               },

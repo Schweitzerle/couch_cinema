@@ -1,17 +1,69 @@
-import 'package:couch_cinema/description_series.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:tmdb_api/tmdb_api.dart';
 
 import '../description.dart';
+import '../utils/SessionManager.dart';
 import '../utils/text.dart';
 import '../widgets/popular_series.dart';
 
-class AllWatchlistSeriesScreen extends StatelessWidget {
-  final List watchlistSeries;
+class AllMoviesScreen extends StatelessWidget {
+  final List movies;
+  final String title;
 
-  const AllWatchlistSeriesScreen({Key? key, required this.watchlistSeries});
+  const AllMoviesScreen({Key? key, required this.movies, required this.title});
+
+
+  /*Future<void> getUserMovieRating(int movieId) async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    List<dynamic> allRatedMovies = [];
+    int ratedMoviesPage = 1;
+    bool hasMoreRatedMoviesPages = true;
+
+    while (hasMoreRatedMoviesPages) {
+      Map<dynamic, dynamic> ratedMoviesResults =
+      await tmdbWithCustLogs.v3.account.getRatedMovies(
+        sessionId!,
+        accountId!,
+        page: ratedMoviesPage,
+      );
+      List<dynamic> ratedMovies = ratedMoviesResults['results'];
+
+      allRatedMovies.addAll(ratedMovies);
+
+      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
+          ratedMovies.isEmpty) {
+        hasMoreRatedMoviesPages = false;
+      } else {
+        ratedMoviesPage++;
+      }
+    }
+
+    for (var movie in allRatedMovies) {
+      if (movie['id'] == movieId) {
+        setState(() {
+          initialRating = movie['rating'];
+          isRated = true;
+        });
+        return movie['rating'];
+      }
+    }
+  }*/
+
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +78,7 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              "Watchlist Series",
+              title,
               style: TextStyle(
                 color: Colors.white,
               ),
@@ -47,7 +99,7 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
             mainAxisSpacing: 16, // Add spacing between grid items vertically
             crossAxisSpacing: 16, // Add spacing between grid items horizontally
             children: List.generate(
-              watchlistSeries.length,
+              movies.length,
                   (int index) {
                 return AnimationConfiguration.staggeredGrid(
                   position: index,
@@ -58,26 +110,31 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
                     curve: Curves.fastLinearToSlowEaseIn,
                     child: FadeInAnimation(
                       child: InkWell(
+                        onLongPress: () {
+                          MovieDialogHelper.showMovieRatingDialog(context, 5, 0, movies[index]['id']);
+                        },
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DescriptionSeries(seriesID: watchlistSeries[index]['id'], isMovie: false)
+                              builder: (context) => DescriptionMovies(movieID: movies[index]['id'], isMovie: true)
                             ),
                           );
                         },
-                        child: Column(
+                        child: movies[index]['poster_path'] != null
+                            ?
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                               Container(
-                                width: 250,
-                                height: 140,
+                                width: 140,
+                                height: 200,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(20),
                                   image: DecorationImage(
                                     image: NetworkImage(
                                       'https://image.tmdb.org/t/p/w500' +
-                                          watchlistSeries[index]['backdrop_path'],
+                                          movies[index]['poster_path'],
                                     ),
                                     fit: BoxFit.cover,
                                   ),
@@ -90,11 +147,11 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
                                     height: 50,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: PopularSeries.getCircleColor(watchlistSeries[index]['rating']),
+                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(movies[index]['vote_average'])),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        watchlistSeries[index]['rating'].toString(),
+                                        movies[index]['vote_average'].toStringAsFixed(1),
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
@@ -111,8 +168,8 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
                               margin: EdgeInsets.symmetric(horizontal: 16), // Add horizontal margin
                               child: Expanded(
                                 child: mod_Text(
-                                  text: watchlistSeries[index]['original_title'] != null
-                                      ? watchlistSeries[index]['original_title']
+                                  text: movies[index]['original_title'] != null
+                                      ? movies[index]['original_title']
                                       : 'Loading',
                                   color: Colors.white,
                                   size: 14,
@@ -120,7 +177,8 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
                               ),
                             ),
                           ],
-                        ),
+                        )
+                            :Container(),
                       ),
                     ),
                   ),
@@ -132,5 +190,6 @@ class AllWatchlistSeriesScreen extends StatelessWidget {
       ),
     );
   }
+
 
 }
