@@ -6,6 +6,7 @@ import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
 
@@ -38,6 +39,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   String status = '';
   String tagline = '';
   String type = '';
+  double initialRating = 0.0;
+  bool isRated = false;
 
   @override
   void initState() {
@@ -45,6 +48,55 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     sessionID = SessionManager.getSessionId();
     apiKey = TMDBApiService.getApiKey();
     fetchData();
+    getUserSeriesRating(widget.seriesID);
+  }
+
+  Future<void> getUserSeriesRating(int movieId) async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    List<dynamic> allRatedMovies = [];
+    int ratedMoviesPage = 1;
+    bool hasMoreRatedMoviesPages = true;
+
+    while (hasMoreRatedMoviesPages) {
+      Map<dynamic, dynamic> ratedMoviesResults =
+      await tmdbWithCustLogs.v3.account.getRatedTvShows(
+        sessionId!,
+        accountId!,
+        page: ratedMoviesPage,
+      );
+      List<dynamic> ratedMovies = ratedMoviesResults['results'];
+
+      allRatedMovies.addAll(ratedMovies);
+
+      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
+          ratedMovies.isEmpty) {
+        hasMoreRatedMoviesPages = false;
+      } else {
+        ratedMoviesPage++;
+      }
+    }
+
+    for (var movie in allRatedMovies) {
+      if (movie['id'] == movieId) {
+        setState(() {
+          initialRating = movie['rating'];
+          isRated = true;
+        });
+        return movie['rating'];
+      }
+    }
+
+
   }
 
   fetchData() async {
@@ -104,7 +156,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
             ),
           ),
           Positioned(
-            top: 150,
+            top: 100,
             left: 10,
             right: 10,
             child: Container(
@@ -112,12 +164,15 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title ?? 'Not Loaded',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                  FittedBox(
+                    fit: BoxFit.fitWidth,
+                    child:  Text(
+                      title ?? 'Not Loaded',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   SizedBox(height: 10),
@@ -235,7 +290,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
           Positioned(
             bottom: 30,
             right: 30,
-            child: FoldableOptions(id: id, isMovie: false,),
+            child: FoldableOptions(id: id, isMovie: false, isRated: isRated, initRating: initialRating,),
           ),
         ],
       ),
@@ -246,8 +301,10 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   class FoldableOptions extends StatefulWidget {
   final int id;
   final bool isMovie;
+  final double initRating;
+  final bool isRated;
 
-  const FoldableOptions({super.key, required this.id, required this.isMovie});
+  const FoldableOptions({super.key, required this.id, required this.isMovie, required this.initRating, required this.isRated});
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
 }
@@ -269,6 +326,8 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
   late Animation<double> verticalPadding;
   late AnimationController controller;
   final duration = Duration(milliseconds: 190);
+
+  double rating = 0.0;
 
   bool isAddedToWatchlist = false;
 
@@ -319,6 +378,43 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
     );
   }
 
+  void submitRating(BuildContext context, double rating) async {
+    // Get the session ID and account ID
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+    // Create an instance of TMDB with the required API key and session ID
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    // Get the movie ID and rating from the state
+    int movieId = widget.id;
+
+    // Submit the rating
+    try {
+      await tmdbWithCustLogs.v3.movies
+          .rateMovie(movieId, rating, sessionId: sessionId);
+
+      // Show a success message or perform any other action after successful rating
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Rating submitted successfully'),
+        ),
+      );
+    } catch (e) {
+      // Show an error message or perform any other action on error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit rating'),
+        ),
+      );
+    }
+
+    Navigator.of(context).pop();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -339,9 +435,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
 
       fetchWatchlist();
   }
-
-
-
 
   Future<void> fetchWatchlist() async {
     int? accountId = await accountID;
@@ -416,7 +509,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
     });
   }
 
-
   void toggleWatchlist() {
     setState(() {
       isAddedToWatchlist = !isAddedToWatchlist;
@@ -430,7 +522,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
     }
 
   }
-
 
   Future<void> addToWatchlist() async {
     // Implement the logic to add the movie/TV show to the user's watchlist
@@ -449,6 +540,74 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
     tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!, widget.id, widget.isMovie ? MediaType.movie: MediaType.tv, shouldAdd: false);
   }
+
+  void showRatingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Rate This Series',
+            style: TextStyle(color: Colors.white, fontSize: 22),
+          ),
+          backgroundColor: Colors.black,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Rating bar
+                  RatingBar.builder(
+                    initialRating: widget.initRating,
+                    minRating: 1,
+                    direction: Axis.vertical,
+                    allowHalfRating: true,
+                    glowColor: Colors.pink,
+                    glow: true,
+                    unratedColor: Color(0xff270140),
+                    itemCount: 10,
+                    itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                    itemBuilder: (context, _) => Icon(
+                      CupertinoIcons.film,
+                      color: Color(0xffd6069b),
+                    ),
+                    onRatingUpdate: (updatedRating) {
+                      rating = updatedRating;
+                      print(updatedRating);
+                    },
+                  )
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Logic to submit the rating
+                submitRating(context, rating);
+              },
+              child: Text(
+                'Submit',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -482,11 +641,16 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
               ),
               Align(
                 alignment: thirdAnim.value,
-                child: getItem(
-                  options.elementAt(2),
-                      () {
-                    // Handle third button tap
-                  },
+                child: Container(
+                  padding:
+                  EdgeInsets.only(left: 37, top: verticalPadding.value),
+                  child: getItem(
+                    widget.isRated ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                        () {
+                      //Handle third button tap
+                      showRatingDialog(context);
+                    },
+                  ),
                 ),
               ),
               Align(

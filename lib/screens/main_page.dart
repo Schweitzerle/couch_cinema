@@ -41,7 +41,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Padding(padding: EdgeInsets.only(bottom: 40), child: ListView(children: [
+      body: Padding(padding: EdgeInsets.only(bottom: 50), child: ListView(children: [
         PopularSeries(popularSeries: seriesPopular),
         TopRatedMovies(topRatedMovies: topratedMovies),
         TrendingMovies(trending: trendingMovies)

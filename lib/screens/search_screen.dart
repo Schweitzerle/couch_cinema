@@ -60,7 +60,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
           Expanded(
             child: AnimationLimiter(
               child: GridView.builder(
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.only(left: 8.0, right: 8, top: 8, bottom: 70),
                 itemCount: films.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,

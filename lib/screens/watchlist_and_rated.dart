@@ -161,7 +161,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
                   ListView(
                     children: [
                       WatchlistMovies(watchlistMovies: watchlistMovies.length < 10 ? watchlistMovies: watchlistMovies.sublist(0, 10), allWatchlistMovies: watchlistMovies,),
-                      WatchlistSeries(watchlistSeries: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allWachlistSeries: watchlistSeries,),
+                      WatchlistSeries(watchlistSeries: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allWatchlistSeries: watchlistSeries,),
                     ],
                   ),
                   ListView(

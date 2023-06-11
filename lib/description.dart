@@ -36,7 +36,8 @@ class _DescriptionState extends State<DescriptionMovies> {
   String status = '';
   String tagline = '';
   int budget = 0;
-  double initRaring= 0;
+  double initialRating = 0.0;
+  bool isRated = false;
 
   @override
   void initState() {
@@ -44,7 +45,57 @@ class _DescriptionState extends State<DescriptionMovies> {
     sessionID = SessionManager.getSessionId();
     apiKey = TMDBApiService.getApiKey();
     fetchData();
+    getUserMovieRating(widget.movieID);
   }
+
+  Future<void> getUserMovieRating(int movieId) async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    String? sessionId = await SessionManager.getSessionId();
+    int? accountId = await SessionManager.getAccountId();
+
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    List<dynamic> allRatedMovies = [];
+    int ratedMoviesPage = 1;
+    bool hasMoreRatedMoviesPages = true;
+
+    while (hasMoreRatedMoviesPages) {
+      Map<dynamic, dynamic> ratedMoviesResults =
+      await tmdbWithCustLogs.v3.account.getRatedMovies(
+        sessionId!,
+        accountId!,
+        page: ratedMoviesPage,
+      );
+      List<dynamic> ratedMovies = ratedMoviesResults['results'];
+
+      allRatedMovies.addAll(ratedMovies);
+
+      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
+          ratedMovies.isEmpty) {
+        hasMoreRatedMoviesPages = false;
+      } else {
+        ratedMoviesPage++;
+      }
+    }
+
+    for (var movie in allRatedMovies) {
+      if (movie['id'] == movieId) {
+        setState(() {
+          initialRating = movie['rating'];
+          isRated = true;
+        });
+        return movie['rating'];
+      }
+    }
+
+
+  }
+
 
   fetchData() async {
     String? sessionId = await sessionID;
@@ -109,7 +160,7 @@ class _DescriptionState extends State<DescriptionMovies> {
             ),
           ),
           Positioned(
-            top: 150,
+            top: 100,
             left: 10,
             right: 10,
             child: Container(
@@ -243,6 +294,8 @@ class _DescriptionState extends State<DescriptionMovies> {
             child: FoldableOptions(
               id: id,
               isMovie: true,
+              isRated: isRated,
+              initRating: initialRating,
             ),
           ),
         ],
@@ -254,9 +307,11 @@ class _DescriptionState extends State<DescriptionMovies> {
 class FoldableOptions extends StatefulWidget {
   final int id;
   final bool isMovie;
+  final bool isRated;
+  final double initRating;
 
 
-  const FoldableOptions({super.key, required this.id, required this.isMovie});
+  const FoldableOptions({super.key, required this.id, required this.isMovie, required this.isRated, required this.initRating});
 
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
@@ -278,14 +333,12 @@ class _FoldableOptionsState extends State<FoldableOptions>
   late Animation<Alignment> thirdAnim;
 
   double rating = 0.0;
-  double initialRating = 0.0;
 
   late Animation<double> verticalPadding;
   late AnimationController controller;
   final duration = Duration(milliseconds: 190);
 
   bool isAddedToWatchlist = false;
-  bool isRated = false;
 
 
   Widget getItem(IconData source, VoidCallback onTap) {
@@ -336,7 +389,6 @@ class _FoldableOptionsState extends State<FoldableOptions>
   }
 
   void showRatingDialog(BuildContext context) {
-    getUserMovieRating(widget.id);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -354,7 +406,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                 children: [
                   // Rating bar
                   RatingBar.builder(
-                    initialRating: initialRating,
+                    initialRating: widget.initRating,
                     minRating: 1,
                     direction: Axis.vertical,
                     allowHalfRating: true,
@@ -402,50 +454,6 @@ class _FoldableOptionsState extends State<FoldableOptions>
     );
   }
 
-  Future<double?> getUserMovieRating(int movieId) async {
-    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-
-    String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
-
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(apiKey, readAccToken),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
-
-    List<dynamic> allRatedMovies = [];
-    int ratedMoviesPage = 1;
-    bool hasMoreRatedMoviesPages = true;
-
-    while (hasMoreRatedMoviesPages) {
-      Map<dynamic, dynamic> ratedMoviesResults =
-      await tmdbWithCustLogs.v3.account.getRatedMovies(
-        sessionId!,
-        accountId!,
-        page: ratedMoviesPage,
-      );
-      List<dynamic> ratedMovies = ratedMoviesResults['results'];
-
-      allRatedMovies.addAll(ratedMovies);
-
-      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
-          ratedMovies.isEmpty) {
-        hasMoreRatedMoviesPages = false;
-      } else {
-        ratedMoviesPage++;
-      }
-    }
-
-    for (var movie in allRatedMovies) {
-      if (movie['id'] == movieId) {
-        initialRating = movie['rating'];
-        isRated = true;
-        return movie['rating'];
-      }
-    }
-    return null;
-  }
 
   void submitRating(BuildContext context, double rating) async {
     // Get the session ID and account ID
@@ -487,6 +495,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
   @override
   void initState() {
     super.initState();
+    fetchWatchlist();
     controller = AnimationController(vsync: this, duration: duration);
 
     final anim = CurvedAnimation(parent: controller, curve: Curves.linear);
@@ -502,8 +511,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     verticalPadding = Tween<double>(begin: 0, end: 26).animate(anim);
 
-    print('Rating: ' + initialRating.toString());
-    fetchWatchlist();
+
   }
 
   Future<void> fetchWatchlist() async {
@@ -656,10 +664,9 @@ class _FoldableOptionsState extends State<FoldableOptions>
                   padding:
                   EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
-                    isRated ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                    widget.isRated ? CupertinoIcons.star_fill : CupertinoIcons.star,
                         () {
                       //Handle third button tap
-                          getUserMovieRating(widget.id);
                       showRatingDialog(context);
                     },
                   ),
