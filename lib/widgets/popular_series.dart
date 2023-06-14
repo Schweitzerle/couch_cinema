@@ -27,7 +27,6 @@ class PopularSeries extends StatelessWidget {
                 final series = popularSeries[index];
                 Map<String, dynamic> data = series;
                 final name = series['original_name'] != null ? series['original_name'] as String : 'Loading';
-                print('JSON: '+ data.toString());
                 return InkWell(
                   onTap: () {
                     Navigator.push(

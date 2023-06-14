@@ -4,6 +4,8 @@ import 'package:tmdb_api/tmdb_api.dart';
 import '../widgets/popular_series.dart';
 import '../widgets/top_rated_movies.dart';
 import '../widgets/trending.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 
 class MainScreen extends StatefulWidget {
 @override
@@ -11,6 +13,7 @@ _MainScreenState createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
+
   List trendingMovies = [];
   List topratedMovies = [];
   List seriesPopular = [];
@@ -24,6 +27,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   loadMovies() async {
+
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
     Map trendingResults = await tmdbWithCustLogs.v3.trending.getTrending();
@@ -31,6 +35,7 @@ class _MainScreenState extends State<MainScreen> {
     Map seriesPopularResults = await tmdbWithCustLogs.v3.tv.getPopular();
 
     setState(() {
+
       trendingMovies = trendingResults['results'];
       topratedMovies = topratedResults['results'];
       seriesPopular = seriesPopularResults['results'];
@@ -40,6 +45,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Padding(padding: EdgeInsets.only(bottom: 50), child: ListView(children: [

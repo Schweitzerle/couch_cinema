@@ -30,7 +30,6 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: Colors.black, // Schwarzer Hintergrund
       body: Column(

@@ -10,14 +10,29 @@ import '../utils/SessionManager.dart';
 import '../utils/text.dart';
 import '../widgets/popular_series.dart';
 
-class AllMoviesScreen extends StatelessWidget {
+class AllMoviesScreen extends StatefulWidget {
   final List movies;
   final String title;
 
-  const AllMoviesScreen({Key? key, required this.movies, required this.title});
+  AllMoviesScreen({super.key, required this.movies, required this.title});
+
+  @override
+  _AllMoviesState createState() => _AllMoviesState();
+}
+
+class _AllMoviesState extends State<AllMoviesScreen> {
+
+  double initRating = 0.0;
+  double rating = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
 
-  /*Future<void> getUserMovieRating(int movieId) async {
+
+  Future<void> getUserMovieRating(int movieId) async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
     final readAccToken =
         'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
@@ -56,19 +71,20 @@ class AllMoviesScreen extends StatelessWidget {
     for (var movie in allRatedMovies) {
       if (movie['id'] == movieId) {
         setState(() {
-          initialRating = movie['rating'];
-          isRated = true;
+          initRating = movie['rating'];
         });
+
         return movie['rating'];
       }
     }
-  }*/
+  }
 
 
   @override
   Widget build(BuildContext context) {
     double _w = MediaQuery.of(context).size.width;
     int columnCount = 2;
+    double initRating = 0;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -78,7 +94,7 @@ class AllMoviesScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              title,
+              widget.title,
               style: TextStyle(
                 color: Colors.white,
               ),
@@ -99,7 +115,7 @@ class AllMoviesScreen extends StatelessWidget {
             mainAxisSpacing: 16, // Add spacing between grid items vertically
             crossAxisSpacing: 16, // Add spacing between grid items horizontally
             children: List.generate(
-              movies.length,
+              widget.movies.length,
                   (int index) {
                 return AnimationConfiguration.staggeredGrid(
                   position: index,
@@ -111,17 +127,19 @@ class AllMoviesScreen extends StatelessWidget {
                     child: FadeInAnimation(
                       child: InkWell(
                         onLongPress: () {
-                          MovieDialogHelper.showMovieRatingDialog(context, 5, 0, movies[index]['id']);
+                          getUserMovieRating(widget.movies[index]['id']);
+                          print('Rat: '+initRating.toString());
+                          MovieDialogHelper.showMovieRatingDialog(context, initRating, rating, widget.movies[index]['id']);
                         },
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DescriptionMovies(movieID: movies[index]['id'], isMovie: true)
+                              builder: (context) => DescriptionMovies(movieID: widget.movies[index]['id'], isMovie: true)
                             ),
                           );
                         },
-                        child: movies[index]['poster_path'] != null
+                        child: widget.movies[index]['poster_path'] != null
                             ?
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -134,7 +152,7 @@ class AllMoviesScreen extends StatelessWidget {
                                   image: DecorationImage(
                                     image: NetworkImage(
                                       'https://image.tmdb.org/t/p/w500' +
-                                          movies[index]['poster_path'],
+                                          widget.movies[index]['poster_path'],
                                     ),
                                     fit: BoxFit.cover,
                                   ),
@@ -147,11 +165,11 @@ class AllMoviesScreen extends StatelessWidget {
                                     height: 50,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(movies[index]['vote_average'])),
+                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(widget.movies[index]['vote_average'])),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        movies[index]['vote_average'].toStringAsFixed(1),
+                                        widget.movies[index]['vote_average'].toStringAsFixed(1),
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
@@ -168,8 +186,8 @@ class AllMoviesScreen extends StatelessWidget {
                               margin: EdgeInsets.symmetric(horizontal: 16), // Add horizontal margin
                               child: Expanded(
                                 child: mod_Text(
-                                  text: movies[index]['original_title'] != null
-                                      ? movies[index]['original_title']
+                                  text: widget.movies[index]['original_title'] != null
+                                      ? widget.movies[index]['original_title']
                                       : 'Loading',
                                   color: Colors.white,
                                   size: 14,
@@ -190,6 +208,5 @@ class AllMoviesScreen extends StatelessWidget {
       ),
     );
   }
-
-
 }
+

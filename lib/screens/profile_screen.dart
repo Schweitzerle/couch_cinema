@@ -1,16 +1,22 @@
-import 'package:couch_cinema/utils/SessionManager.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:firebase_database/ui/firebase_animated_list.dart';
+import 'package:firebase_ui_database/firebase_ui_database.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 
+import '../Database/user.dart';
 import '../main.dart';
+import '../utils/SessionManager.dart';
+import 'package:http/http.dart' as http;
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 
 class UserProfileScreen extends StatefulWidget {
-
-
   @override
   _UserProfileScreenState createState() => _UserProfileScreenState();
 }
@@ -26,8 +32,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   List rankedMovies = [];
   List rankedSeries = [];
   final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-  final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-
+  final readAccToken =
+      'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
 
   @override
   initState() {
@@ -35,15 +41,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     loadData();
   }
 
-
-  void loadData() async{
+  void loadData() async {
     int? accountId = await accountID;
     String? sessionId = await sessionID;
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    final response = await http.get(
-        Uri.parse('https://api.themoviedb.org/3/account/$accountId?api_key=$apiKey&session_id=$sessionId'));
+    final response = await http.get(Uri.parse(
+        'https://api.themoviedb.org/3/account/$accountId?api_key=$apiKey&session_id=$sessionId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -65,14 +70,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       print('Error: ${sessionId}');
     }
 
-
     // Fetch all rated movies from all pages
     List<dynamic> allRatedMovies = [];
     int ratedMoviesPage = 1;
     bool hasMoreRatedMoviesPages = true;
 
     while (hasMoreRatedMoviesPages) {
-      Map<dynamic, dynamic> ratedMoviesResults = await tmdbWithCustLogs.v3.account.getRatedMovies(
+      Map<dynamic, dynamic> ratedMoviesResults =
+          await tmdbWithCustLogs.v3.account.getRatedMovies(
         sessionId!,
         accountId!,
         page: ratedMoviesPage,
@@ -81,12 +86,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
       allRatedMovies.addAll(ratedMovies);
 
-      if (ratedMoviesPage == ratedMoviesResults['total_pages'] || ratedMovies.isEmpty) {
+      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
+          ratedMovies.isEmpty) {
         hasMoreRatedMoviesPages = false;
       } else {
         ratedMoviesPage++;
       }
-
     }
 
     // Fetch all rated TV shows from all pages
@@ -95,7 +100,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     bool hasMoreRatedSeriesPages = true;
 
     while (hasMoreRatedSeriesPages) {
-      Map<dynamic, dynamic> ratedSeriesResults = await tmdbWithCustLogs.v3.account.getRatedTvShows(
+      Map<dynamic, dynamic> ratedSeriesResults =
+          await tmdbWithCustLogs.v3.account.getRatedTvShows(
         sessionId!,
         accountId!,
         page: ratedSeriesPage,
@@ -104,7 +110,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
       allRatedSeries.addAll(ratedSeries);
 
-      if (ratedSeriesPage == ratedSeriesResults['total_pages'] || ratedSeries.isEmpty) {
+      if (ratedSeriesPage == ratedSeriesResults['total_pages'] ||
+          ratedSeries.isEmpty) {
         hasMoreRatedSeriesPages = false;
       } else {
         ratedSeriesPage++;
@@ -116,7 +123,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       rankedSeries = allRatedSeries;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -171,10 +177,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildProfileStat('Movies Ranked', rankedMovies.length.toString()),
-                      _buildProfileStat('Series Ranked', rankedSeries.length.toString()),
+                      _buildProfileStat(
+                          'Movies Ranked', rankedMovies.length.toString()),
+                      _buildProfileStat(
+                          'Series Ranked', rankedSeries.length.toString()),
                       _buildProfileStat('Friends', '0'.toString()),
                     ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      UserSearchDialog.userSearchDialog(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      primary: Color(0xffd6069b), // Set custom background color
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            10), // Set custom corner radius
+                      ),
+                    ),
+                    child: Text('Friends'),
                   ),
                 ],
               ),
@@ -184,10 +205,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
-
-
-
-
 
   Widget _buildProfileStat(String label, String value) {
     return Column(
@@ -220,12 +237,175 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (BuildContext context) => MyHomePage()),
-          (route) => false,
+      (route) => false,
+    );
+  }
+}
+
+class UserSearchDialog {
+  static List<User> users = [];
+  static void userSearchDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shadowColor: Color(0xff690257),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            'Search Users',
+            style: TextStyle(color: Colors.white, fontSize: 22),
+          ),
+          backgroundColor: Color(0xFF1f1f1f),
+          content:
+              Scaffold(
+                backgroundColor: Colors.grey[900], // Schwarzer Hintergrund
+                body: Column(
+                  children: [
+                    SizedBox(
+                        height: MediaQuery.of(context).padding.top +
+                            16), // Abstand zur Statusleiste
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TextField(
+                        onChanged: (value) {
+                          _searchUsers(context, value);
+                        },
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Suche nach einem Film oder einer Serie',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          fillColor: Colors.grey[900],
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: AnimationLimiter(
+                        child: GridView.builder(
+                          padding: EdgeInsets.only(
+                              left: 8.0, right: 8, top: 8, bottom: 70),
+                          itemCount: users.length,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.7,
+                          ),
+                          itemBuilder: (context, index) {
+                            final user = users[index];
+                            return AnimationConfiguration.staggeredGrid(
+                                position: index,
+                                duration: Duration(milliseconds: 500),
+                                columnCount: 2,
+                                child: ScaleAnimation(
+                                  duration: Duration(milliseconds: 900),
+                                  curve: Curves.fastLinearToSlowEaseIn,
+                                  child: FadeInAnimation(
+                                    child: GestureDetector(
+                                      onTap: () {},
+                                      child: Container(
+                                        margin: EdgeInsets.all(8.0),
+                                        decoration: BoxDecoration(
+                                          color: Color(0xFF242323),
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.1),
+                                              blurRadius: 10,
+                                              spreadRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            Expanded(
+                                              child: Image.network(
+                                                user.imagePath,
+                                                fit: BoxFit.cover,
+                                                height:
+                                                    200.0, // Specify a fixed height for images
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.all(8.0),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    user.username,
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ));
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
+  static Future<void> _searchUsers(BuildContext context, String query) async {
+    users.clear();
+    final ref = FirebaseDatabase.instance.ref("users");
+    final snapshot = await ref.get();
 
+    if (snapshot.exists) {
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      data.forEach((key, value) async {
+        final accountId = value['accountId'] as int;
+        final sessionId = value['sessionId'] as String;
 
+        if (accountId.toString().contains(query)) {
+          final user = User(accountId: accountId, sessionId: sessionId);
+          await user.loadUserData();
+          users.add(user);
+        }
+      });
 
-
+      if (users.isNotEmpty) {
+        print('Users found');
+      } else {
+        print('No users found with the specified query.');
+      }
+    } else {
+      print('No data available.');
+    }
+  }
 }
