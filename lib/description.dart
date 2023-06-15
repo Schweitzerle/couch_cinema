@@ -332,7 +332,9 @@ class _DescriptionState extends State<DescriptionMovies> {
                           ),
                         ),
                         RecommendedMovies(
-                            recommendedMovies: recommendedMovies.length < 10 ?  recommendedMovies :recommendedMovies.sublist(0, 10),
+                            recommendedMovies: recommendedMovies.length < 10
+                                ? recommendedMovies
+                                : recommendedMovies.sublist(0, 10),
                             allRecommmendedMovies: recommendedMovies)
                       ],
                     ),
@@ -397,6 +399,13 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
   bool isAddedToWatchlist = false;
 
+  int? moviesListId;
+  int? accountId;
+  String? sessionId;
+  TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
   Widget getItem(IconData source, VoidCallback onTap) {
     final size = 45.0;
     return GestureDetector(
@@ -447,6 +456,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
   @override
   void initState() {
     super.initState();
+    setIDs();
     controller = AnimationController(vsync: this, duration: duration);
 
     final anim = CurvedAnimation(parent: controller, curve: Curves.linear);
@@ -462,6 +472,41 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
     fetchWatchlist();
+  }
+
+  Future<void> setIDs() async {
+    accountId = await accountID;
+    sessionId = await sessionID;
+
+    late List<dynamic> allLists = [];
+    int listPage = 1;
+    bool hasMoreListPages = true;
+
+    while (hasMoreListPages) {
+      Map<dynamic, dynamic> listResults =
+          await tmdbWithCustLogs.v3.account.getCreatedLists(
+        sessionId!,
+        accountId!,
+        page: listPage,
+      );
+      List<dynamic> lists = listResults['results'];
+
+      allLists.addAll(lists);
+
+      if (listPage == listResults['total_pages'] || lists.isEmpty) {
+        hasMoreListPages = false;
+      } else {
+        listPage++;
+      }
+
+      for (final movies in lists) {
+        if (movies['name'] == 'Recommended Movies') {
+          moviesListId = movies['id'];
+          print(moviesListId.toString());
+          break; // Exit the loop once the matching series is found
+        }
+      }
+    }
   }
 
   Future<void> fetchWatchlist() async {
@@ -558,20 +603,13 @@ class _FoldableOptionsState extends State<FoldableOptions>
     // Implement the logic to add the movie/TV show to the user's watchlist
     int? accountId = await accountID;
     String? sessionId = await sessionID;
-    TMDB tmdbWithCustLogs = TMDB(
-        ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
-        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
     tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!,
         widget.id, widget.isMovie ? MediaType.movie : MediaType.tv);
   }
 
   Future<void> removeFromWatchlist() async {
     // Implement the logic to remove the movie/TV show from the user's watchlist
-    int? accountId = await accountID;
-    String? sessionId = await sessionID;
-    TMDB tmdbWithCustLogs = TMDB(
-        ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
-        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
     tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!,
         widget.id, widget.isMovie ? MediaType.movie : MediaType.tv,
         shouldAdd: false);
@@ -579,6 +617,8 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
   @override
   Widget build(BuildContext context) {
+    print(moviesListId.toString());
+    print(widget.id.toString());
     return Container(
       width: 140,
       height: 210,
@@ -595,7 +635,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                   child: getItem(
                     options.elementAt(0),
                     () {
-                      // Handle first button tap
+                      tmdbWithCustLogs.v3.lists.addItem(sessionId, moviesListId.toString(), widget.id);
                     },
                   ),
                 ),

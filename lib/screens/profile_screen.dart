@@ -15,6 +15,8 @@ import '../utils/SessionManager.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class UserProfileScreen extends StatefulWidget {
   @override
@@ -186,7 +188,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      UserSearchDialog.userSearchDialog(context);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => UserSearchDialog(),
+                          ));
                     },
                     style: ElevatedButton.styleFrom(
                       primary: Color(0xffd6069b), // Set custom background color
@@ -242,148 +248,242 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 }
 
-class UserSearchDialog {
-  static List<User> users = [];
-  static void userSearchDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shadowColor: Color(0xff690257),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            'Search Users',
-            style: TextStyle(color: Colors.white, fontSize: 22),
-          ),
-          backgroundColor: Color(0xFF1f1f1f),
-          content:
-              Scaffold(
-                backgroundColor: Colors.grey[900], // Schwarzer Hintergrund
-                body: Column(
-                  children: [
-                    SizedBox(
-                        height: MediaQuery.of(context).padding.top +
-                            16), // Abstand zur Statusleiste
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: TextField(
-                        onChanged: (value) {
-                          _searchUsers(context, value);
-                        },
-                        style: TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: 'Suche nach einem Film oder einer Serie',
-                          hintStyle: TextStyle(color: Colors.grey),
-                          fillColor: Colors.grey[900],
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: AnimationLimiter(
-                        child: GridView.builder(
-                          padding: EdgeInsets.only(
-                              left: 8.0, right: 8, top: 8, bottom: 70),
-                          itemCount: users.length,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.7,
-                          ),
-                          itemBuilder: (context, index) {
-                            final user = users[index];
-                            return AnimationConfiguration.staggeredGrid(
-                                position: index,
-                                duration: Duration(milliseconds: 500),
-                                columnCount: 2,
-                                child: ScaleAnimation(
-                                  duration: Duration(milliseconds: 900),
-                                  curve: Curves.fastLinearToSlowEaseIn,
-                                  child: FadeInAnimation(
-                                    child: GestureDetector(
-                                      onTap: () {},
-                                      child: Container(
-                                        margin: EdgeInsets.all(8.0),
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFF242323),
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.1),
-                                              blurRadius: 10,
-                                              spreadRadius: 2,
-                                            ),
-                                          ],
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            Expanded(
-                                              child: Image.network(
-                                                user.imagePath,
-                                                fit: BoxFit.cover,
-                                                height:
-                                                    200.0, // Specify a fixed height for images
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    user.username,
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
+
+class UserSearchDialog extends StatefulWidget {
+  @override
+  _UserSearchDialogState createState() => _UserSearchDialogState();
+}
+
+class _UserSearchDialogState extends State<UserSearchDialog> {
+  final Future<String?> sessionID = SessionManager.getSessionId();
+  final Future<int?> accountID = SessionManager.getAccountId();
+  final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+  final readAccToken =
+      'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+  List<User> users = [];
+  bool isPressed2 = true;
+  bool isHighlighted = false;
+  int? accountId = 0;
+
+  final database = FirebaseDatabase.instance.ref().child('users');
+
+  @override
+  void initState()  {
+    super.initState();
+    setAccId();
+  }
+
+  Future<void> setAccId() async {
+    accountId = await accountID;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shadowColor: Color(0xff690257),
+      shape:
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(
+        'Search Users',
+        style: TextStyle(color: Colors.white, fontSize: 22),
+      ),
+      backgroundColor: Color(0xFF1f1f1f),
+      content: Scaffold(
+        backgroundColor: Colors.grey[900], // Schwarzer Hintergrund
+        body: Column(
+          children: [
+            SizedBox(
+              child: TextField(
+                onChanged: (value) {
+                  _searchUsers(context, value);
+                },
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Suche nach UserID',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  fillColor: Colors.grey[900],
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: AnimationLimiter(
+                child: GridView.builder(
+                  itemCount: users.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 1,
+                    childAspectRatio: 0.7,
+                  ),
+                  itemBuilder: (context, index) {
+                    final user = users[index];
+                    //_searchFollowers(context, accountId.toString(), user.accountId.toString());
+                    return AnimationConfiguration.staggeredGrid(
+                        position: index,
+                        duration: Duration(milliseconds: 500),
+                        columnCount: 2,
+                        child: ScaleAnimation(
+                          duration: Duration(milliseconds: 900),
+                          curve: Curves.fastLinearToSlowEaseIn,
+                          child: FadeInAnimation(
+                            child: GestureDetector(
+                              onTap: () {},
+                              child: Container(
+                                margin: EdgeInsets.all(8.0),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF242323),
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.stretch,
+                                  children: [
+                                    Container(
+                                      height: 200,
+                                      width: 140,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.network(
+                                          user.imagePath,
+                                          fit: BoxFit.cover,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ));
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+                                    Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        children: [
+                                          Row(children: [
+                                            Text(
+                                              user.username,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            InkWell(
+                                              highlightColor:
+                                              Colors.transparent,
+                                              splashColor:
+                                              Colors.transparent,
+                                              onHighlightChanged: (value) {
+                                                setState(() {
+                                                  isHighlighted =
+                                                  !isHighlighted;
+                                                });
+                                              },
+                                              onTap: () {
+                                                isPressed2 = !isPressed2;
+                                                setState(() async {
+                                                  // Create a new user entry in the database
+                                                  final newUser = User(
+                                                      accountId: user.accountId,
+                                                      sessionId: user
+                                                          .sessionId);
+                                                  final newUserRef = database
+                                                      .child(
+                                                      accountId.toString())
+                                                      .child('following')
+                                                      .child(user.accountId
+                                                      .toString());
+                                                  await newUserRef.set(newUser
+                                                      .toMap());
+                                                });
+                                              },
+                                              child: AnimatedContainer(
+                                                margin: EdgeInsets.all(
+                                                    isHighlighted
+                                                        ? 0
+                                                        : 2.5),
+                                                height:
+                                                isHighlighted ? 50 : 45,
+                                                width:
+                                                isHighlighted ? 50 : 45,
+                                                curve: Curves
+                                                    .fastLinearToSlowEaseIn,
+                                                duration: Duration(
+                                                    milliseconds: 300),
+                                                decoration: BoxDecoration(
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.2),
+                                                      blurRadius: 20,
+                                                      offset: Offset(5, 10),
+                                                    ),
+                                                  ],
+                                                  color: Colors.white,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: isPressed2
+                                                    ? Icon(
+                                                  Icons
+                                                      .favorite_border,
+                                                  color: Colors.black
+                                                      .withOpacity(
+                                                      0.6),
+                                                )
+                                                    : Icon(
+                                                  Icons.favorite,
+                                                  color: Colors.pink
+                                                      .withOpacity(
+                                                      1.0),
+                                                ),
+                                              ),
+                                            ),
+                                          ])
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ));
+                  },
                 ),
-              ),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white, fontSize: 18),
               ),
             ),
           ],
-        );
-      },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+        ),
+      ],
     );
   }
 
-  static Future<void> _searchUsers(BuildContext context, String query) async {
+
+  Future<void> _searchFollowers(BuildContext context, String accId,
+      String query) async {
     users.clear();
-    final ref = FirebaseDatabase.instance.ref("users");
+    final ref = FirebaseDatabase.instance.ref("users").child(accId).child(
+        'following');
     final snapshot = await ref.get();
 
     if (snapshot.exists) {
@@ -392,20 +492,46 @@ class UserSearchDialog {
         final accountId = value['accountId'] as int;
         final sessionId = value['sessionId'] as String;
 
-        if (accountId.toString().contains(query)) {
-          final user = User(accountId: accountId, sessionId: sessionId);
-          await user.loadUserData();
-          users.add(user);
+        if (accountId.toString() == query) {
+          setState(() {
+            isPressed2 = true;
+          });
         }
+        setState(() {
+          isPressed2 = false;
+        });
       });
-
-      if (users.isNotEmpty) {
-        print('Users found');
-      } else {
-        print('No users found with the specified query.');
-      }
-    } else {
-      print('No data available.');
     }
   }
-}
+
+    Future<void> _searchUsers(BuildContext context, String query) async {
+      users.clear();
+      final ref = FirebaseDatabase.instance.ref("users");
+      final snapshot = await ref.get();
+
+      if (snapshot.exists) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        data.forEach((key, value) async {
+          final accountId = value['accountId'] as int;
+          final sessionId = value['sessionId'] as String;
+
+          if (accountId.toString().contains(query)) {
+            final user = User(accountId: accountId, sessionId: sessionId);
+            await user.loadUserData();
+            setState(() {
+              users.add(user);
+            });
+          }
+        });
+
+        if (users.isNotEmpty) {
+          print('Users found');
+        } else {
+          print('No users found with the specified query.');
+        }
+      } else {
+        print('No data available.');
+      }
+    }
+  }
+

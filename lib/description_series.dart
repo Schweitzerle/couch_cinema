@@ -380,6 +380,13 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
 
   double rating = 0.0;
 
+  int? seriesListId;
+  int? accountId;
+  String? sessionId;
+  TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
   bool isAddedToWatchlist = false;
 
   Widget getItem(IconData source, VoidCallback onTap) {
@@ -430,15 +437,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
   }
 
   void submitRating(BuildContext context, double rating) async {
-    // Get the session ID and account ID
-    String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
-
-    // Create an instance of TMDB with the required API key and session ID
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
 
     // Get the movie ID and rating from the state
     int movieId = widget.id;
@@ -508,6 +506,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
   @override
   void initState() {
     super.initState();
+    setIDs();
     controller = AnimationController(vsync: this, duration: duration);
 
     final anim = CurvedAnimation(parent: controller, curve: Curves.linearToEaseOut);
@@ -524,6 +523,41 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
     verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
 
       fetchWatchlist();
+  }
+
+  Future<void> setIDs() async {
+    accountId = await accountID;
+    sessionId = await sessionID;
+
+    late List<dynamic> allLists = [];
+    int listPage = 1;
+    bool hasMoreListPages = true;
+
+    while (hasMoreListPages) {
+      Map<dynamic, dynamic> listResults =
+      await tmdbWithCustLogs.v3.account.getCreatedLists(
+        sessionId!,
+        accountId!,
+        page: listPage,
+      );
+      List<dynamic> lists = listResults['results'];
+
+      allLists.addAll(lists);
+
+      if (listPage == listResults['total_pages'] || lists.isEmpty) {
+        hasMoreListPages = false;
+      } else {
+        listPage++;
+      }
+
+      for (final movies in lists) {
+        if (movies['name'] == 'Recommended Series') {
+          seriesListId = movies['id'];
+          print(seriesListId.toString());
+          break; // Exit the loop once the matching series is found
+        }
+      }
+    }
   }
 
   Future<void> fetchWatchlist() async {
@@ -736,8 +770,8 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                   getItem(
                     options.elementAt(0),
                         () {
-                      // Handle first button tap
-                    },
+                          tmdbWithCustLogs.v3.lists.addItem(sessionId, seriesListId.toString(), widget.id);
+                        },
                   ),
                 ),
               ),

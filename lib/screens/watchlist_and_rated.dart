@@ -131,10 +131,10 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
     }
 
     setState(() {
-      watchlistMovies = allWatchlistMovies;
-      watchlistSeries = allWatchlistSeries;
-      ratedMovies = allRatedMovies;
-      ratedSeries = allRatedSeries;
+      watchlistMovies = allWatchlistMovies.reversed.toList();
+      watchlistSeries = allWatchlistSeries.reversed.toList();
+      ratedMovies = allRatedMovies.reversed.toList();
+      ratedSeries = allRatedSeries.reversed.toList();
     });
   }
 
