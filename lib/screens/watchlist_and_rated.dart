@@ -149,7 +149,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
             TabBar(
               controller: _tabController,
               tabs: [
-                Tab(text: 'Watchlist'),
+                Tab(text: 'Recommended'),
                 Tab(text: 'Rated'),
               ],
               indicatorColor: Color(0xffd6069b),
@@ -160,8 +160,8 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
                 children: [
                   ListView(
                     children: [
-                      WatchlistMovies(watchlistMovies: watchlistMovies.length < 10 ? watchlistMovies: watchlistMovies.sublist(0, 10), allWatchlistMovies: watchlistMovies,),
-                      WatchlistSeries(watchlistSeries: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allWatchlistSeries: watchlistSeries,),
+                      WatchlistMovies(watchlistMovies: watchlistMovies.length < 10 ? watchlistMovies: watchlistMovies.sublist(0, 10), allWatchlistMovies: watchlistMovies, title: 'Watchlist Movies',),
+                      WatchlistSeries(watchlistSeries: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allWatchlistSeries: watchlistSeries, title: 'Watchlist Series',),
                     ],
                   ),
                   ListView(

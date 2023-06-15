@@ -88,7 +88,7 @@ class _RecommendedScreenState extends State<RecommendedScreen>
         for (final series in lists) {
           if (series['name'] == 'Recommended Movies') {
             movieListId = series['id'];
-            print(seriesListId.toString());
+            print(movieListId.toString());
 
             break; // Exit the loop once the matching series is found
           }
@@ -105,7 +105,7 @@ class _RecommendedScreenState extends State<RecommendedScreen>
       List<dynamic> allRecommendedSeries = [];
       Map<dynamic, dynamic> reccSeriesResults =
       await tmdbWithCustLogs.v3.lists.getDetails(seriesListId.toString());
-      List<dynamic> reccSeries = reccMovieResults['items'];
+      List<dynamic> reccSeries = reccSeriesResults['items'];
       allRecommendedMovies.addAll(reccSeries);
 
       // Fetch all rated movies from all pages
@@ -177,8 +177,8 @@ class _RecommendedScreenState extends State<RecommendedScreen>
             TabBar(
               controller: _tabController,
               tabs: [
-                Tab(text: 'Watchlist'),
-                Tab(text: 'Rated'),
+                Tab(text: 'Friend Recommendations'),
+                Tab(text: 'Friend Ratings'),
               ],
               indicatorColor: Color(0xffd6069b),
             ),
@@ -190,7 +190,10 @@ class _RecommendedScreenState extends State<RecommendedScreen>
                     future: _searchUsersFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
+                        return CircularProgressIndicator(
+                          value: 5,
+                          color: Color(0xff690257),
+                        );
                       } else if (snapshot.hasError) {
                         return Text('Error: ${snapshot.error}');
                       } else {
@@ -201,13 +204,13 @@ class _RecommendedScreenState extends State<RecommendedScreen>
                               watchlistMovies: recommendedMovies.length < 10
                                   ? recommendedMovies
                                   : recommendedMovies.sublist(0, 10),
-                              allWatchlistMovies: recommendedMovies,
+                              allWatchlistMovies: recommendedMovies, title: 'Recommended Movies',
                             ),
                             WatchlistSeries(
                               watchlistSeries: recommendedSeries.length < 10
                                   ? recommendedSeries
                                   : recommendedSeries.sublist(0, 10),
-                              allWatchlistSeries: recommendedSeries,
+                              allWatchlistSeries: recommendedSeries, title: 'Recommended Series',
 
                             ),
                           ],

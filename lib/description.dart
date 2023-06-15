@@ -7,6 +7,7 @@ import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:couch_cinema/widgets/recommendedMovies.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
@@ -617,8 +618,6 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
   @override
   Widget build(BuildContext context) {
-    print(moviesListId.toString());
-    print(widget.id.toString());
     return Container(
       width: 140,
       height: 210,
@@ -635,6 +634,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                   child: getItem(
                     options.elementAt(0),
                     () {
+                      HapticFeedback.lightImpact();
                       tmdbWithCustLogs.v3.lists.addItem(sessionId, moviesListId.toString(), widget.id);
                     },
                   ),
@@ -647,7 +647,10 @@ class _FoldableOptionsState extends State<FoldableOptions>
                       EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
                     isAddedToWatchlist ? Icons.bookmark : Icons.bookmark_border,
-                    toggleWatchlist,
+                    () {
+                      toggleWatchlist();
+                      HapticFeedback.lightImpact();
+                    }
                   ),
                 ),
               ),
@@ -662,6 +665,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                         : CupertinoIcons.star,
                     () {
                       //Handle third button tap
+                      HapticFeedback.lightImpact();
                       MovieDialogHelper.showMovieRatingDialog(
                           context, widget.initRating, rating, widget.id);
                     },
@@ -682,6 +686,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                         : Icons.add,
                     () {
                       // Handle primary button tap
+                      HapticFeedback.lightImpact();
                     },
                   ),
                 ),

@@ -1,17 +1,20 @@
 import 'package:couch_cinema/description_series.dart';
 import 'package:couch_cinema/screens/all_rated_series.dart';
 import 'package:couch_cinema/screens/all_movies.dart';
+import 'package:couch_cinema/screens/all_series.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../description.dart';
 
 class WatchlistSeries extends StatelessWidget {
   final List watchlistSeries;
   final List allWatchlistSeries;
+  final String title;
 
-  const WatchlistSeries({Key? key, required this.watchlistSeries, required this.allWatchlistSeries}) : super(key: key);
+  const WatchlistSeries({Key? key, required this.watchlistSeries, required this.allWatchlistSeries, required this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +29,12 @@ class WatchlistSeries extends StatelessWidget {
               const mod_Text(text: 'Series', color: Colors.white, size: 22),
               ElevatedButton(
                 onPressed: () {
+                  HapticFeedback.lightImpact();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AllRatedSeriesScreen(
-                          ratedSeries: allWatchlistSeries
+                      builder: (context) => AllSeriesScreen(
+                          series: allWatchlistSeries, title: title,
                       ),
                     ),
                   );
@@ -57,6 +61,7 @@ class WatchlistSeries extends StatelessWidget {
 
                 return InkWell(
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     Navigator.push(
                       context,
                       MaterialPageRoute(

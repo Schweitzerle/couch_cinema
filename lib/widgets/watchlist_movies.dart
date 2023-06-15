@@ -2,14 +2,16 @@ import 'package:couch_cinema/screens/all_movies.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../description.dart';
 
 class WatchlistMovies extends StatelessWidget {
   final List watchlistMovies;
   final List allWatchlistMovies;
+  final String title;
 
-  const WatchlistMovies({Key? key, required this.watchlistMovies, required this.allWatchlistMovies})
+  const WatchlistMovies({Key? key, required this.watchlistMovies, required this.allWatchlistMovies, required this.title})
       : super(key: key);
 
   @override
@@ -25,11 +27,12 @@ class WatchlistMovies extends StatelessWidget {
               const mod_Text(text: 'Movies', color: Colors.white, size: 22),
               ElevatedButton(
                 onPressed: () {
+                  HapticFeedback.lightImpact();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => AllMoviesScreen(
-                        movies: allWatchlistMovies, title: 'WatchlistMovies',
+                        movies: allWatchlistMovies, title: title,
                       ),
                     ),
                   );
@@ -54,6 +57,7 @@ class WatchlistMovies extends StatelessWidget {
               itemBuilder: (context, index) {
                 return InkWell(
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     Navigator.push(
                       context,
                       MaterialPageRoute(

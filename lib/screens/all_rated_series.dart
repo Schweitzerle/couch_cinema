@@ -59,6 +59,7 @@ class AllRatedSeriesScreen extends StatelessWidget {
                     child: FadeInAnimation(
                       child: InkWell(
                         onTap: () {
+                          HapticFeedback.lightImpact();
                           Navigator.push(
                             context,
                             MaterialPageRoute(

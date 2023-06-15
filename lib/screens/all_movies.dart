@@ -127,11 +127,12 @@ class _AllMoviesState extends State<AllMoviesScreen> {
                     child: FadeInAnimation(
                       child: InkWell(
                         onLongPress: () {
-                          getUserMovieRating(widget.movies[index]['id']);
+                          /*getUserMovieRating(widget.movies[index]['id']);
                           print('Rat: '+initRating.toString());
                           MovieDialogHelper.showMovieRatingDialog(context, initRating, rating, widget.movies[index]['id']);
-                        },
+                        */},
                         onTap: () {
+                          HapticFeedback.lightImpact();
                           Navigator.push(
                             context,
                             MaterialPageRoute(

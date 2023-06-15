@@ -7,6 +7,7 @@ import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:couch_cinema/widgets/recommended_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
@@ -550,13 +551,14 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
         listPage++;
       }
 
-      for (final movies in lists) {
-        if (movies['name'] == 'Recommended Series') {
-          seriesListId = movies['id'];
+      for (final list in lists) {
+        if (list['name'] == 'Recommended Series') {
+          seriesListId = list['id'];
           print(seriesListId.toString());
-          break; // Exit the loop once the matching series is found
+          break; // Exit the loop once the matching series list is found
         }
       }
+
     }
   }
 
@@ -716,6 +718,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
               onPressed: () {
                 // Logic to submit the rating
                 deleteRating(context, rating);
+                HapticFeedback.mediumImpact();
                 Navigator.of(context).pop();
               },
               child: Text(
@@ -725,6 +728,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
             ),
             TextButton(
               onPressed: () {
+                HapticFeedback.lightImpact();
                 Navigator.of(context).pop();
               },
               child: Text(
@@ -736,6 +740,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
               onPressed: () {
                 // Logic to submit the rating
                 submitRating(context, rating);
+                HapticFeedback.mediumImpact();
                 Navigator.of(context).pop();
               },
               child: Text(
@@ -770,7 +775,12 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                   getItem(
                     options.elementAt(0),
                         () {
-                          tmdbWithCustLogs.v3.lists.addItem(sessionId, seriesListId.toString(), widget.id);
+                          List<ListItem> items = [
+                            ListItem(mediaType: MediaType.tv, mediaId: widget.id),
+                          ];
+                      print('sID: '+ widget.id.toString());
+                      tmdbWithCustLogs.v4.lists.addItems(TMDBApiService.getReadAccToken(), seriesListId!, items);
+                      HapticFeedback.lightImpact();
                         },
                   ),
                 ),
@@ -781,7 +791,10 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                   padding: EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
                     isAddedToWatchlist ? Icons.bookmark : Icons.bookmark_border,
-                    toggleWatchlist,
+                    () {
+                      toggleWatchlist();
+                      HapticFeedback.lightImpact;
+                    }
                   ),
                 ),
               ),
@@ -795,6 +808,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                         () {
                       //Handle third button tap
                       showRatingDialog(context);
+                      HapticFeedback.lightImpact();
                     },
                   ),
                 ),
@@ -809,6 +823,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                     controller.isCompleted || controller.isAnimating ? Icons.close : Icons.add,
                         () {
                       // Handle primary button tap
+                          HapticFeedback.lightImpact();
                     },
                   ),
                 ),

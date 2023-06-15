@@ -5,6 +5,7 @@ import 'package:couch_cinema/screens/all_series.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../description.dart';
 
@@ -12,7 +13,11 @@ class RecommendedSeries extends StatelessWidget {
   final List recommendedSeries;
   final List allRecommendedSeries;
 
-  const RecommendedSeries({Key? key, required this.recommendedSeries, required this.allRecommendedSeries}) : super(key: key);
+  const RecommendedSeries(
+      {Key? key,
+      required this.recommendedSeries,
+      required this.allRecommendedSeries})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,26 +29,28 @@ class RecommendedSeries extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const mod_Text(text: 'Recommended Series', color: Colors.white, size: 22),
+              const mod_Text(
+                  text: 'Recommended Series', color: Colors.white, size: 22),
               ElevatedButton(
                 onPressed: () {
-                  print('Rec: '+ allRecommendedSeries.length.toString());
-                if(allRecommendedSeries.isNotEmpty) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AllSeriesScreen(
-                        series: allRecommendedSeries, title: 'Recommended Series',
+                  HapticFeedback.lightImpact();
+                  if (allRecommendedSeries.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllSeriesScreen(
+                          series: allRecommendedSeries,
+                          title: 'Recommended Series',
+                        ),
                       ),
-                    ),
-                  );
-                }
-
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   primary: Color(0xffd6069b), // Set custom background color
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10), // Set custom corner radius
+                    borderRadius:
+                        BorderRadius.circular(10), // Set custom corner radius
                   ),
                 ),
                 child: Text('All'),
@@ -58,15 +65,19 @@ class RecommendedSeries extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
                 final series = recommendedSeries[index];
-                final name = series['original_name'] != null ? series['original_name'] as String : 'Loading';
+                final name = series['original_name'] != null
+                    ? series['original_name'] as String
+                    : 'Loading';
 
                 return InkWell(
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => DescriptionSeries(seriesID: recommendedSeries[index]['id'], isMovie: false)
-                      ),
+                          builder: (context) => DescriptionSeries(
+                              seriesID: recommendedSeries[index]['id'],
+                              isMovie: false)),
                     );
                   },
                   child: Container(
@@ -93,7 +104,9 @@ class RecommendedSeries extends StatelessWidget {
                               height: 50,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: PopularSeries.getCircleColor(PopularSeries.parseDouble(series['vote_average'])),
+                                color: PopularSeries.getCircleColor(
+                                    PopularSeries.parseDouble(
+                                        series['vote_average'])),
                               ),
                               child: Center(
                                 child: Text(
@@ -125,5 +138,4 @@ class RecommendedSeries extends StatelessWidget {
       ),
     );
   }
-
 }

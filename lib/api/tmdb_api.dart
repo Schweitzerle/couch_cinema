@@ -80,8 +80,58 @@ class TMDBApiService {
     return null;
   }
 
+  static Future<String?> loginV4(String username, String password) async {
+    final String? token = await _getRequestTokenV4();
+    if (token != null) {
+      final String? sessionId = await _validateTokenWithLogin(token, username, password);
+      return sessionId;
+    }
+    return null;
+  }
+
+  static Future<String> getRequestTokenV4(String apiKey) async {
+    String url = 'https://api.themoviedb.org/4/auth/request_token';
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $apiKey',
+      'Content-Type': 'application/json;charset=utf-8',
+    };
+
+    http.Response response = await http.post(Uri.parse(url), headers: headers);
+    Map<String, dynamic> json = jsonDecode(response.body);
+    return json['request_token'];
+  }
+
+  static Future<String> generateAccessTokenV4(String apiKey, String requestToken) async {
+    String url = 'https://api.themoviedb.org/4/auth/access_token';
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $apiKey',
+      'Content-Type': 'application/json;charset=utf-8',
+    };
+
+    Map<String, dynamic> body = {
+      'request_token': requestToken,
+    };
+
+    http.Response response = await http.post(Uri.parse(url), headers: headers, body: jsonEncode(body));
+    Map<String, dynamic> json = jsonDecode(response.body);
+    return json['access_token'];
+  }
+
   static Future<String?> _getRequestToken() async {
     final String apiUrl = 'https://api.themoviedb.org/3/authentication/token/new?api_key=$apiKey';
+    final response = await http.get(Uri.parse(apiUrl));
+
+    if (response.statusCode == 200) {
+      final token = jsonDecode(response.body)['request_token'];
+      return token;
+    } else {
+      print('Failed to get request token: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  static Future<String?> _getRequestTokenV4() async {
+    final String apiUrl = 'https://api.themoviedb.org/4/auth/request_token';
     final response = await http.get(Uri.parse(apiUrl));
 
     if (response.statusCode == 200) {

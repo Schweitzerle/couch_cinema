@@ -3,6 +3,7 @@ import 'package:couch_cinema/description.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TrendingMovies extends StatelessWidget {
   final List trending;
@@ -26,6 +27,7 @@ class TrendingMovies extends StatelessWidget {
               itemBuilder: (context, index) {
                 return InkWell(
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     Navigator.push(
                       context,
                       MaterialPageRoute(

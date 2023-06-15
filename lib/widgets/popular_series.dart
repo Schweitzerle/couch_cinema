@@ -1,6 +1,7 @@
 import 'package:couch_cinema/description_series.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../description.dart';
 
@@ -29,6 +30,7 @@ class PopularSeries extends StatelessWidget {
                 final name = series['original_name'] != null ? series['original_name'] as String : 'Loading';
                 return InkWell(
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -106,12 +108,16 @@ class PopularSeries extends StatelessWidget {
 
 
   static Color getCircleColor(double rating) {
-    if (rating < 3.3) {
-      return Colors.red;
-    } else if (rating >= 3.3 && rating <= 6.7) {
-      return Colors.orange;
+    if (rating < 2.0) {
+      return Color(0xFF212121);
+    } else if (rating >= 2.5 && rating <= 5.0) {
+      return Color(0xFF6E3A06);
+    } else if (rating >= 5.0 && rating <= 7.0) {
+      return Color(0xFF87868c);
+    } else if (rating >= 7.0 && rating <= 8.5) {
+      return Color(0xFFA48111);
     } else {
-      return Colors.green;
+      return Color(0xFF6B0000);
     }
   }
 }

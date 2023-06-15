@@ -281,13 +281,9 @@ class _UserSearchDialogState extends State<UserSearchDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      insetPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 180),
       shadowColor: Color(0xff690257),
-      shape:
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(
-        'Search Users',
-        style: TextStyle(color: Colors.white, fontSize: 22),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Color(0xFF1f1f1f),
       content: Scaffold(
         backgroundColor: Colors.grey[900], // Schwarzer Hintergrund

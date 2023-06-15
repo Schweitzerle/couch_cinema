@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:couch_cinema/description_series.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import '../description.dart';
+import '../utils/text.dart';
+import '../widgets/popular_series.dart';
 
 class FilmSearchScreen extends StatefulWidget {
   @override
@@ -16,7 +19,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
 
   Future<void> searchFilms(String query) async {
     final apiKey =
-        '24b3f99aa424f62e2dd5452b83ad2e43'; // Ersetzen Sie YOUR_API_KEY durch Ihren eigenen TMDb API-Schlüssel
+        '24b3f99aa424f62e2dd5452b83ad2e43'; // Replace with your own TMDb API key
     final url = Uri.parse(
         'https://api.themoviedb.org/3/search/multi?api_key=$apiKey&query=$query');
 
@@ -30,13 +33,16 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double _w = MediaQuery.of(context).size.width;
+    int columnCount = 2;
+
     return Scaffold(
-      backgroundColor: Colors.black, // Schwarzer Hintergrund
+      backgroundColor: Colors.black,
       body: Column(
         children: [
           SizedBox(
-              height: MediaQuery.of(context).padding.top +
-                  16), // Abstand zur Statusleiste
+            height: MediaQuery.of(context).padding.top + 16,
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -45,7 +51,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
               },
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: 'Suche nach einem Film oder einer Serie',
+                hintText: 'Search for a movie or series',
                 hintStyle: TextStyle(color: Colors.grey),
                 fillColor: Colors.grey[900],
                 filled: true,
@@ -57,87 +63,123 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
             ),
           ),
           Expanded(
-            child: AnimationLimiter(
-              child: GridView.builder(
-                padding: EdgeInsets.only(left: 8.0, right: 8, top: 8, bottom: 70),
-                itemCount: films.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                ),
-                itemBuilder: (context, index) {
-                  final film = films[index];
-                  String? mediaType = film['media_type'];
-                  bool isMovie = mediaType == 'movie'? true: false;
-                  return AnimationConfiguration.staggeredGrid(
-                      position: index,
-                      duration: Duration(milliseconds: 500),
-                      columnCount: 2,
-                      child: ScaleAnimation(
-                        duration: Duration(milliseconds: 900),
-                        curve: Curves.fastLinearToSlowEaseIn,
-                        child: FadeInAnimation(
-                          child: GestureDetector(
-                  onTap: () {
-                  Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                  builder: (context) => isMovie? DescriptionMovies(movieID: film['id'], isMovie: isMovie): DescriptionSeries(seriesID: film['id'], isMovie: isMovie),
-                  ));
-                  },
-                            child: Container(
-                              margin: EdgeInsets.all(8.0),
-                              decoration: BoxDecoration(
-                                color: Color(0xFF242323),
-                                borderRadius: BorderRadius.circular(10.0),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
+            child: SingleChildScrollView(
+              child: AnimationLimiter(
+                child: GridView.count(
+                  physics: NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  padding: EdgeInsets.all(_w / 60),
+                  crossAxisCount: columnCount,
+                  childAspectRatio: 2 / 3,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  children: List.generate(
+                    films.length,
+                        (int index) {
+                      return AnimationConfiguration.staggeredGrid(
+                        position: index,
+                        duration: Duration(milliseconds: 500),
+                        columnCount: columnCount,
+                        child: ScaleAnimation(
+                          duration: Duration(milliseconds: 900),
+                          curve: Curves.fastLinearToSlowEaseIn,
+                          child: FadeInAnimation(
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DescriptionMovies(
+                                      movieID: films[index]['id'],
+                                      isMovie: true,
+                                    ),
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Expanded(
-                                    child: Image.network(
-                                      'https://image.tmdb.org/t/p/w200${film['poster_path']}',
-                                      fit: BoxFit.cover,
-                                      height: 200.0, // Specify a fixed height for images
+                                  Container(
+                                    width: 140,
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      image: DecorationImage(
+                                        image: films[index]['poster_path'] !=
+                                            null
+                                            ? NetworkImage(
+                                          'https://image.tmdb.org/t/p/w200' +
+                                              films[index]['poster_path'],
+                                        )
+                                            : NetworkImage(
+                                            'https://placehold.co/600x400'),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    child: Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: Container(
+                                        margin: EdgeInsets.all(1),
+                                        width: 50,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: PopularSeries.getCircleColor(
+                                              PopularSeries.parseDouble(films[index]['vote_average'])),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            films[index]['vote_average'] != null ? films[index]['vote_average'].toStringAsFixed(1) : '0',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                  Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          film['title'] ?? film['name'],
-                                          style: TextStyle(
+                                  SizedBox(height: 8),
+                                  Column(
+                                    children: [
+                                      Container(
+                                        margin:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                        child: Expanded(
+                                          child: mod_Text(
+                                            text: films[index]['title'] ??
+                                                films[index]['name'],
                                             color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                                            size: 14,
                                           ),
                                         ),
-                                        SizedBox(height: 4.0),
-                                        Text(
-                                          '(${film['release_date']?.substring(0, 4) ?? film['first_air_date']?.substring(0, 4)})',
-                                          style: TextStyle(
-                                            color: Colors.grey,
+                                      ),
+                                      Container(
+                                        margin:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                        child: Expanded(
+                                          child: mod_Text(
+                                            text: '(${films[index]['release_date']?.substring(0, 4) ?? films[index]['first_air_date']?.substring(0, 4)})',
+                                            color: Colors.white,
+                                            size: 14,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
+                                      ),
+                                    ]
+
+                                  )
+
                                 ],
                               ),
                             ),
                           ),
                         ),
-                      ));
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
