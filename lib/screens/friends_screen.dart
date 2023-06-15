@@ -78,7 +78,7 @@ class _RecommendedScreenState extends State<RecommendedScreen>
         }
 
         for (final series in lists) {
-          if (series['name'] == 'Recommended Series') {
+          if (series['name'] == 'CouchCinema Recommended Series') {
             seriesListId = series['id'];
             print(seriesListId.toString());
             break; // Exit the loop once the matching series is found
@@ -86,7 +86,7 @@ class _RecommendedScreenState extends State<RecommendedScreen>
         }
 
         for (final series in lists) {
-          if (series['name'] == 'Recommended Movies') {
+          if (series['name'] == 'CouchCinema Recommended Movies') {
             movieListId = series['id'];
             print(movieListId.toString());
 

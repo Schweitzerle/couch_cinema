@@ -235,8 +235,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                         } else {
                                           TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
                                               logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-                                          tmdbWithCustLogs.v3.lists.createList(sessionId, 'Recommended Series', 'Recommended Series for followed users');
-                                          tmdbWithCustLogs.v3.lists.createList(sessionId, 'Recommended Movies', 'Recommended Movies for followed users');
+                                          tmdbWithCustLogs.v3.lists.createList(sessionId, 'CouchCinema Recommended Series', 'Recommended Series for followed users');
+                                          tmdbWithCustLogs.v3.lists.createList(sessionId, 'CouchCinema Recommended Movies', 'Recommended Movies for followed users');
                                           // Create a new user entry in the database
                                           final newUser = User(accountId: _accountId, sessionId: sessionId);
                                           final newUserRef = database.child('users').child(_accountId.toString());
