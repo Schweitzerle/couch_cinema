@@ -552,7 +552,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
       }
 
       for (final list in lists) {
-        if (list['name'] == 'Recommended Series') {
+        if (list['name'] == 'CouchCinema Recommended Series') {
           seriesListId = list['id'];
           print(seriesListId.toString());
           break; // Exit the loop once the matching series list is found

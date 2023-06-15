@@ -501,7 +501,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
       }
 
       for (final movies in lists) {
-        if (movies['name'] == 'Recommended Movies') {
+        if (movies['name'] == 'CouchCinema Recommended Movies') {
           moviesListId = movies['id'];
           print(moviesListId.toString());
           break; // Exit the loop once the matching series is found
