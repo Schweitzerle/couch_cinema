@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:tmdb_api/tmdb_api.dart';
 
 import '../description.dart';
 import '../utils/text.dart';
@@ -87,13 +88,14 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
                             child: InkWell(
                               onTap: () {
                                 HapticFeedback.lightImpact();
+                                print(films[index]['id']);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => DescriptionMovies(
+                                    builder: (context) => films[index]['media_type'] == 'movie' ? DescriptionMovies(
                                       movieID: films[index]['id'],
                                       isMovie: true,
-                                    ),
+                                    ) : DescriptionSeries(seriesID: films[index]['id'], isMovie: false),
                                   ),
                                 );
                               },
@@ -161,7 +163,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
                                         EdgeInsets.symmetric(horizontal: 16),
                                         child: Expanded(
                                           child: mod_Text(
-                                            text: '(${films[index]['release_date']?.substring(0, 4) ?? films[index]['first_air_date']?.substring(0, 4)})',
+                                            text: '(${films[index]['release_date'] ?? films[index]['first_air_date']})',
                                             color: Colors.white,
                                             size: 14,
                                           ),

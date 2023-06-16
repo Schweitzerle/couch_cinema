@@ -51,6 +51,7 @@ dependencies:
   sqflite: ^2.2.8+4
   uuid: ^3.0.7
   firebase_database: ^10.2.3
+  number_slide_animation: ^0.2.1
 
 dev_dependencies:
   flutter_test:

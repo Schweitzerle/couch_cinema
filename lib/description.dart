@@ -12,6 +12,8 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
 
+import 'description_series.dart';
+
 class DescriptionMovies extends StatefulWidget {
   final int movieID;
   late bool isMovie;
@@ -68,7 +70,7 @@ class _DescriptionState extends State<DescriptionMovies> {
 
     while (hasMoreRecomMoviePages) {
       Map<dynamic, dynamic> watchlistResults =
-          await tmdbWithCustLogs.v3.movies.getRecommended(
+      await tmdbWithCustLogs.v3.movies.getRecommended(
         widget.movieID,
         page: recomMoviesPage,
       );
@@ -107,7 +109,7 @@ class _DescriptionState extends State<DescriptionMovies> {
 
     while (hasMoreRatedMoviesPages) {
       Map<dynamic, dynamic> ratedMoviesResults =
-          await tmdbWithCustLogs.v3.account.getRatedMovies(
+      await tmdbWithCustLogs.v3.account.getRatedMovies(
         sessionId!,
         accountId!,
         page: ratedMoviesPage,
@@ -170,7 +172,6 @@ class _DescriptionState extends State<DescriptionMovies> {
   @override
   Widget build(BuildContext context) {
     // Extract the vote_average
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -239,7 +240,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color:
-                                    PopularSeries.getCircleColor(voteAverage),
+                                PopularSeries.getCircleColor(voteAverage),
                               ),
                               child: Center(
                                 child: Text(
@@ -311,11 +312,11 @@ class _DescriptionState extends State<DescriptionMovies> {
                       ),
                     ],
                   ),
+                  SizedBox(height: 20),
                   SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 20),
                         Text(
                           'Description:',
                           style: TextStyle(
@@ -325,18 +326,21 @@ class _DescriptionState extends State<DescriptionMovies> {
                           ),
                         ),
                         SizedBox(height: 10),
-                        Text(
-                          description,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
+                        SingleChildScrollView(
+                          child: Text(
+                            description,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                         RecommendedMovies(
-                            recommendedMovies: recommendedMovies.length < 10
-                                ? recommendedMovies
-                                : recommendedMovies.sublist(0, 10),
-                            allRecommmendedMovies: recommendedMovies)
+                          recommendedMovies: recommendedMovies.length < 10
+                              ? recommendedMovies
+                              : recommendedMovies.sublist(0, 10),
+                          allRecommmendedMovies: recommendedMovies,
+                        ),
                       ],
                     ),
                   ),
