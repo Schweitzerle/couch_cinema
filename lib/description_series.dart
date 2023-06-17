@@ -4,7 +4,7 @@ import 'package:couch_cinema/api/tmdb_api.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
-import 'package:couch_cinema/widgets/recommended_series.dart';
+import 'package:couch_cinema/widgets/series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -331,7 +331,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                             fontSize: 16,
                           ),
                         ),
-                        RecommendedSeries(recommendedSeries: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allRecommendedSeries: recommendedSeries)
+                        SeriesScreen(series: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series',)
                       ],
                     ),
                   ),

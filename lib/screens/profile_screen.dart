@@ -33,6 +33,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   int friendsCount = 0;
   List rankedMovies = [];
   List rankedSeries = [];
+  String? sessionId;
+  int? accountId;
   final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
   final readAccToken =
       'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
@@ -41,6 +43,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   initState() {
     super.initState();
     loadData();
+    setIDs();
   }
 
   void loadData() async {
@@ -126,6 +129,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     });
   }
 
+  Future<void> setIDs() async {
+    accountId = await accountID;
+    sessionId = await sessionID;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -175,6 +183,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       color: Colors.white,
                     ),
                   ),
+                  SizedBox(height: 40.0),
+                  Text(
+                    accountId.toString(),
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: Colors.white,
+                    ),
+                  ),
                   SizedBox(height: 70.0),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -186,6 +202,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       _buildProfileStat('Friends', '0'.toString()),
                     ],
                   ),
+                  SizedBox(height: 70.0,),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
@@ -195,13 +212,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           ));
                     },
                     style: ElevatedButton.styleFrom(
-                      primary: Color(0xffd6069b), // Set custom background color
+                      primary: Color(0xff270140), // Set custom background color
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
                             10), // Set custom corner radius
                       ),
                     ),
-                    child: Text('Friends'),
+                    child: Text('Following'),
                   ),
                 ],
               ),

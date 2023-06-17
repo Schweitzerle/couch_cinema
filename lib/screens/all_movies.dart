@@ -13,8 +13,9 @@ import '../widgets/popular_series.dart';
 class AllMoviesScreen extends StatefulWidget {
   final List movies;
   final String title;
+  final Color appBarColor;
 
-  AllMoviesScreen({super.key, required this.movies, required this.title});
+  AllMoviesScreen({super.key, required this.movies, required this.title, required this.appBarColor});
 
   @override
   _AllMoviesState createState() => _AllMoviesState();
@@ -22,62 +23,7 @@ class AllMoviesScreen extends StatefulWidget {
 
 class _AllMoviesState extends State<AllMoviesScreen> {
 
-  double initRating = 0.0;
-  double rating = 0.0;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
-
-
-  Future<void> getUserMovieRating(int movieId) async {
-    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken =
-        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-
-    String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
-
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(apiKey, readAccToken),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
-
-    List<dynamic> allRatedMovies = [];
-    int ratedMoviesPage = 1;
-    bool hasMoreRatedMoviesPages = true;
-
-    while (hasMoreRatedMoviesPages) {
-      Map<dynamic, dynamic> ratedMoviesResults =
-      await tmdbWithCustLogs.v3.account.getRatedMovies(
-        sessionId!,
-        accountId!,
-        page: ratedMoviesPage,
-      );
-      List<dynamic> ratedMovies = ratedMoviesResults['results'];
-
-      allRatedMovies.addAll(ratedMovies);
-
-      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
-          ratedMovies.isEmpty) {
-        hasMoreRatedMoviesPages = false;
-      } else {
-        ratedMoviesPage++;
-      }
-    }
-
-    for (var movie in allRatedMovies) {
-      if (movie['id'] == movieId) {
-        setState(() {
-          initRating = movie['rating'];
-        });
-
-        return movie['rating'];
-      }
-    }
-  }
 
 
   @override
@@ -89,7 +35,7 @@ class _AllMoviesState extends State<AllMoviesScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Color(0xffd6069b),
+        backgroundColor: widget.appBarColor,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [

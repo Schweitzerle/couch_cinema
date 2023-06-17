@@ -10,8 +10,9 @@ import '../widgets/popular_series.dart';
 
 class AllRatedSeriesScreen extends StatelessWidget {
   final List ratedSeries;
+  final Color appBarColor;
 
-  const AllRatedSeriesScreen({Key? key, required this.ratedSeries});
+  const AllRatedSeriesScreen({Key? key, required this.ratedSeries, required this.appBarColor});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,7 @@ class AllRatedSeriesScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Color(0xffd6069b),
+        backgroundColor: appBarColor,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [

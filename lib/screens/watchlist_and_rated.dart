@@ -1,14 +1,12 @@
 import 'package:couch_cinema/utils/SessionManager.dart';
+import 'package:couch_cinema/widgets/movies.dart';
 import 'package:flutter/material.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 
 import '../widgets/popular_series.dart';
 import '../widgets/rated_movies.dart';
 import '../widgets/rated_series.dart';
-import '../widgets/top_rated_movies.dart';
-import '../widgets/trending.dart';
-import '../widgets/watchlist_movies.dart';
-import '../widgets/watchlist_series.dart';
+import '../widgets/series.dart';
 
 class WatchlistScreen extends StatefulWidget {
   @override
@@ -149,7 +147,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
             TabBar(
               controller: _tabController,
               tabs: [
-                Tab(text: 'Recommended'),
+                Tab(text: 'Watchlist'),
                 Tab(text: 'Rated'),
               ],
               indicatorColor: Color(0xffd6069b),
@@ -160,14 +158,14 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
                 children: [
                   ListView(
                     children: [
-                      WatchlistMovies(watchlistMovies: watchlistMovies.length < 10 ? watchlistMovies: watchlistMovies.sublist(0, 10), allWatchlistMovies: watchlistMovies, title: 'Watchlist Movies',),
-                      WatchlistSeries(watchlistSeries: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allWatchlistSeries: watchlistSeries, title: 'Watchlist Series',),
+                      MoviesScreen(movies: watchlistMovies.length < 10 ? watchlistMovies: watchlistMovies.sublist(0, 10), allMovies: watchlistMovies, title: 'Watchlist Movies', buttonColor: Color(0xffd6069b),),
+                      SeriesScreen(series: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allSeries: watchlistSeries, title: 'Watchlist Series', buttonColor: Color(0xffd6069b),),
                     ],
                   ),
                   ListView(
                     children: [
-                      RatedMovies(ratedMovies: ratedMovies.length < 10 ? ratedMovies: ratedMovies.sublist(0, 10), allRatedMovies: ratedMovies,),
-                      RatedSeries(ratedSeries: ratedSeries.length < 10 ? ratedSeries: ratedSeries.sublist(0, 10), allRatedSeries: ratedSeries,),
+                      RatedMovies(ratedMovies: ratedMovies.length < 10 ? ratedMovies: ratedMovies.sublist(0, 10), allRatedMovies: ratedMovies, buttonColor: Color(0xffd6069b),),
+                      RatedSeries(ratedSeries: ratedSeries.length < 10 ? ratedSeries: ratedSeries.sublist(0, 10), allRatedSeries: ratedSeries, buttonColor: Color(0xffd6069b),),
                     ],
                   ),
                 ],

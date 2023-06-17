@@ -47,14 +47,15 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
+              cursorColor: Colors.black,
               onChanged: (value) {
                 searchFilms(value);
               },
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: 'Search for a movie or series',
-                hintStyle: TextStyle(color: Colors.grey),
-                fillColor: Colors.grey[900],
+                hintText: 'Search for a movie or series...',
+                hintStyle: TextStyle(color: Colors.black45),
+                fillColor: Color(0xff480178),
                 filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.0),
@@ -69,7 +70,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
                 child: GridView.count(
                   physics: NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  padding: EdgeInsets.all(_w / 60),
+                  padding: EdgeInsets.only(left: _w / 70, right: _w / 70, top: _w / 70, bottom: 50),
                   crossAxisCount: columnCount,
                   childAspectRatio: 2 / 3,
                   mainAxisSpacing: 16,

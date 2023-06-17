@@ -1,3 +1,4 @@
+import 'package:couch_cinema/widgets/movies.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -9,10 +10,7 @@ import '../Database/user.dart';
 import '../widgets/popular_series.dart';
 import '../widgets/rated_movies.dart';
 import '../widgets/rated_series.dart';
-import '../widgets/top_rated_movies.dart';
-import '../widgets/trending.dart';
-import '../widgets/watchlist_movies.dart';
-import '../widgets/watchlist_series.dart';
+import '../widgets/series.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class RecommendedScreen extends StatefulWidget {
@@ -80,7 +78,6 @@ class _RecommendedScreenState extends State<RecommendedScreen>
         for (final series in lists) {
           if (series['name'] == 'CouchCinema Recommended Series') {
             seriesListId = series['id'];
-            print(seriesListId.toString());
             break; // Exit the loop once the matching series is found
           }
         }
@@ -88,7 +85,6 @@ class _RecommendedScreenState extends State<RecommendedScreen>
         for (final series in lists) {
           if (series['name'] == 'CouchCinema Recommended Movies') {
             movieListId = series['id'];
-            print(movieListId.toString());
 
             break; // Exit the loop once the matching series is found
           }
@@ -160,7 +156,6 @@ class _RecommendedScreenState extends State<RecommendedScreen>
         recommendedSeries.addAll(allRecommendedSeries.reversed.toList());
         ratedMovies.addAll(allRatedMovies.reversed.toList());
         ratedSeries.addAll(allRatedSeries.reversed.toList());
-        print('Print ' + ratedMovies.toString());
       });
     }
   }
@@ -180,7 +175,7 @@ class _RecommendedScreenState extends State<RecommendedScreen>
                 Tab(text: 'Friend Recommendations'),
                 Tab(text: 'Friend Ratings'),
               ],
-              indicatorColor: Color(0xffd6069b),
+              indicatorColor: Color(0xff690257),
             ),
             Expanded(
               child: TabBarView(
@@ -200,17 +195,19 @@ class _RecommendedScreenState extends State<RecommendedScreen>
                         return ListView(
                           children: [
 
-                            WatchlistMovies(
-                              watchlistMovies: recommendedMovies.length < 10
+                            MoviesScreen(
+                              movies: recommendedMovies.length < 10
                                   ? recommendedMovies
                                   : recommendedMovies.sublist(0, 10),
-                              allWatchlistMovies: recommendedMovies, title: 'Recommended Movies',
+                              allMovies: recommendedMovies, title: 'Recommended Movies',
+                                buttonColor: Color(0xff690257),
                             ),
-                            WatchlistSeries(
-                              watchlistSeries: recommendedSeries.length < 10
+                            SeriesScreen(
+                              series: recommendedSeries.length < 10
                                   ? recommendedSeries
                                   : recommendedSeries.sublist(0, 10),
-                              allWatchlistSeries: recommendedSeries, title: 'Recommended Series',
+                              allSeries: recommendedSeries, title: 'Recommended Series',
+                                buttonColor: Color(0xff690257),
 
                             ),
                           ],
@@ -232,13 +229,13 @@ class _RecommendedScreenState extends State<RecommendedScreen>
                               ratedMovies: ratedMovies.length < 10
                                   ? ratedMovies
                                   : ratedMovies.sublist(0, 10),
-                              allRatedMovies: ratedMovies,
+                              allRatedMovies: ratedMovies, buttonColor: Color(0xff690257),
                             ),
                             RatedSeries(
                               ratedSeries: ratedSeries.length < 10
                                   ? ratedSeries
                                   : ratedSeries.sublist(0, 10),
-                              allRatedSeries: ratedSeries,
+                              allRatedSeries: ratedSeries, buttonColor: Color(0xff690257),
                             ),
                           ],
                         );

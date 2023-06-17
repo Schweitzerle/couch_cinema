@@ -1,3 +1,7 @@
+import 'package:couch_cinema/description_series.dart';
+import 'package:couch_cinema/screens/all_rated_series.dart';
+import 'package:couch_cinema/screens/all_movies.dart';
+import 'package:couch_cinema/screens/all_series.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
@@ -5,12 +9,13 @@ import 'package:flutter/services.dart';
 
 import '../description.dart';
 
-class TopRatedMovies extends StatelessWidget {
-  final List topRatedMovies;
+class SeriesScreen extends StatelessWidget {
+  final List series;
+  final List allSeries;
+  final String title;
+  final Color buttonColor;
 
-  const TopRatedMovies({Key? key, required this.topRatedMovies}) : super(key: key);
-
-
+  const SeriesScreen({Key? key, required this.series, required this.allSeries, required this.title, required this.buttonColor}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,36 +24,67 @@ class TopRatedMovies extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const mod_Text(text: 'Top Rated Movies', color: Colors.white, size: 22),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              mod_Text(text: title, color: Colors.white, size: 22),
+              ElevatedButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllSeriesScreen(
+                          series: allSeries, title: title, appBarColor: buttonColor,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: buttonColor, // Set custom background color
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10), // Set custom corner radius
+                  ),
+                ),
+                child: Text('All'),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 270,
+            height: 200,
             child: ListView.builder(
-              itemCount: topRatedMovies.length,
+              itemCount: series.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
+                final show = series[index];
+                final name = show['original_name'] != null ? show['original_name'] as String : 'Loading';
+
                 return InkWell(
                   onTap: () {
                     HapticFeedback.lightImpact();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => DescriptionMovies(movieID: topRatedMovies[index]['id'], isMovie: true)
+                          builder: (context) => DescriptionSeries(seriesID: series[index]['id'], isMovie: false)
                       ),
                     );
                   },
-                  child: SizedBox(
-                    width: 140,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    width: 250,
                     child: Column(
                       children: [
                         Container(
-                          height: 200,
+                          width: 250,
+                          height: 140,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                             image: DecorationImage(
                               image: NetworkImage(
-                                'https://image.tmdb.org/t/p/w500' + topRatedMovies[index]['poster_path'],
+                                'https://image.tmdb.org/t/p/w500${show['backdrop_path']}',
                               ),
+                              fit: BoxFit.cover,
                             ),
                           ),
                           child: Align(
@@ -58,11 +94,11 @@ class TopRatedMovies extends StatelessWidget {
                               height: 50,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: PopularSeries.getCircleColor(PopularSeries.parseDouble(topRatedMovies[index]['vote_average'])),
+                                color: PopularSeries.getCircleColor(PopularSeries.parseDouble(show['vote_average'])),
                               ),
                               child: Center(
                                 child: Text(
-                                  topRatedMovies[index]['vote_average'].toStringAsFixed(1),
+                                  show['vote_average'].toStringAsFixed(1),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -73,8 +109,9 @@ class TopRatedMovies extends StatelessWidget {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 10),
                         mod_Text(
-                          text: topRatedMovies[index]['title'] != null ? topRatedMovies[index]['title'] : 'Loading',
+                          text: name,
                           color: Colors.white,
                           size: 14,
                         ),
@@ -89,6 +126,5 @@ class TopRatedMovies extends StatelessWidget {
       ),
     );
   }
-
 
 }

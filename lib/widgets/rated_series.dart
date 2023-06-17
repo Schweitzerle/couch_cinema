@@ -11,8 +11,9 @@ import '../description.dart';
 class RatedSeries extends StatelessWidget {
   final List ratedSeries;
   final List allRatedSeries;
+  final Color buttonColor;
 
-  const RatedSeries({Key? key, required this.ratedSeries, required this.allRatedSeries}) : super(key: key);
+  const RatedSeries({Key? key, required this.ratedSeries, required this.allRatedSeries, required this.buttonColor}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class RatedSeries extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-          const mod_Text(text: 'Series', color: Colors.white, size: 22),
+          const mod_Text(text: 'Rated Series', color: Colors.white, size: 22),
           ElevatedButton(
             onPressed: () {
               HapticFeedback.lightImpact();
@@ -32,18 +33,18 @@ class RatedSeries extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AllRatedSeriesScreen(
-                      ratedSeries: allRatedSeries
+                      ratedSeries: allRatedSeries, appBarColor: buttonColor,
                   ),
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              primary: Color(0xffd6069b), // Set custom background color
+              primary: buttonColor, // Set custom background color
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10), // Set custom corner radius
               ),
             ),
-            child: Text('All Series'),
+            child: Text('All'),
           ),
         ],
       ),

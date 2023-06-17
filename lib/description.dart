@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:couch_cinema/api/tmdb_api.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
+import 'package:couch_cinema/widgets/movies.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
-import 'package:couch_cinema/widgets/recommendedMovies.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -70,7 +70,7 @@ class _DescriptionState extends State<DescriptionMovies> {
 
     while (hasMoreRecomMoviePages) {
       Map<dynamic, dynamic> watchlistResults =
-      await tmdbWithCustLogs.v3.movies.getRecommended(
+          await tmdbWithCustLogs.v3.movies.getRecommended(
         widget.movieID,
         page: recomMoviesPage,
       );
@@ -109,7 +109,7 @@ class _DescriptionState extends State<DescriptionMovies> {
 
     while (hasMoreRatedMoviesPages) {
       Map<dynamic, dynamic> ratedMoviesResults =
-      await tmdbWithCustLogs.v3.account.getRatedMovies(
+          await tmdbWithCustLogs.v3.account.getRatedMovies(
         sessionId!,
         accountId!,
         page: ratedMoviesPage,
@@ -240,7 +240,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color:
-                                PopularSeries.getCircleColor(voteAverage),
+                                    PopularSeries.getCircleColor(voteAverage),
                               ),
                               child: Center(
                                 child: Text(
@@ -261,51 +261,63 @@ class _DescriptionState extends State<DescriptionMovies> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 10),
-                          Text(
-                            tagline,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                          Container(
+                            child: Text(
+                              tagline,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                           SizedBox(height: 10),
-                          Text(
-                            'Status: $status',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                          Container(
+                            child: Text(
+                              'Status: $status',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                           SizedBox(height: 10),
-                          Text(
-                            'Release: $launchOn',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                          Container(
+                            child: Text(
+                              'Release: $launchOn',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                           SizedBox(height: 10),
-                          Text(
-                            'Runtime: $runtime minutes',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                          Container(
+                            child: Text(
+                              'Runtime: $runtime minutes',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                           SizedBox(height: 10),
-                          Text(
-                            'Budget: \$${budget.toString()}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                          Container(
+                            child: Text(
+                              'Budget: \$${budget.toString()}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                           SizedBox(height: 10),
-                          Text(
-                            'Revenue: \$${revenue.toString()}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                          Container(
+                            child: Text(
+                              'Revenue: \$${revenue.toString()}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                         ],
@@ -335,11 +347,13 @@ class _DescriptionState extends State<DescriptionMovies> {
                             ),
                           ),
                         ),
-                        RecommendedMovies(
-                          recommendedMovies: recommendedMovies.length < 10
+                        MoviesScreen(
+                          movies: recommendedMovies.length < 10
                               ? recommendedMovies
                               : recommendedMovies.sublist(0, 10),
-                          allRecommmendedMovies: recommendedMovies,
+                          allMovies: recommendedMovies,
+                          title: 'Recommended Movies',
+                          buttonColor: Color(0xff540126),
                         ),
                       ],
                     ),
@@ -639,7 +653,8 @@ class _FoldableOptionsState extends State<FoldableOptions>
                     options.elementAt(0),
                     () {
                       HapticFeedback.lightImpact();
-                      tmdbWithCustLogs.v3.lists.addItem(sessionId, moviesListId.toString(), widget.id);
+                      tmdbWithCustLogs.v3.lists.addItem(
+                          sessionId, moviesListId.toString(), widget.id);
                     },
                   ),
                 ),
@@ -650,12 +665,12 @@ class _FoldableOptionsState extends State<FoldableOptions>
                   padding:
                       EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
-                    isAddedToWatchlist ? Icons.bookmark : Icons.bookmark_border,
-                    () {
-                      toggleWatchlist();
-                      HapticFeedback.lightImpact();
-                    }
-                  ),
+                      isAddedToWatchlist
+                          ? Icons.bookmark
+                          : Icons.bookmark_border, () {
+                    toggleWatchlist();
+                    HapticFeedback.lightImpact();
+                  }),
                 ),
               ),
               Align(

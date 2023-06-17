@@ -2,14 +2,17 @@ import 'package:couch_cinema/screens/all_movies.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../description.dart';
 
-class Movies extends StatelessWidget {
+class MoviesScreen extends StatelessWidget {
   final List movies;
   final List allMovies;
+  final String title;
+  final Color buttonColor;
 
-  const Movies({Key? key, required this.movies, required this.allMovies})
+  const MoviesScreen({Key? key, required this.movies, required this.allMovies, required this.title, required this.buttonColor})
       : super(key: key);
 
   @override
@@ -22,26 +25,27 @@ class Movies extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const mod_Text(text: 'Movies', color: Colors.white, size: 22),
+              mod_Text(text: title, color: Colors.white, size: 22),
               ElevatedButton(
                 onPressed: () {
+                  HapticFeedback.lightImpact();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => AllMoviesScreen(
-                        movies: allMovies, title: 'WatchlistMovies',
+                        movies: allMovies, title: title, appBarColor: buttonColor,
                       ),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  primary: Color(0xffd6069b), // Set custom background color
+                  primary: buttonColor, // Set custom background color
                   shape: RoundedRectangleBorder(
                     borderRadius:
                     BorderRadius.circular(10), // Set custom corner radius
                   ),
                 ),
-                child: Text('All Movies'),
+                child: Text('All'),
               ),
             ],
           ),
