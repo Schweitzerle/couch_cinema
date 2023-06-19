@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
-import '../description.dart';
+import '../movieDetail.dart';
 import '../utils/text.dart';
 import '../widgets/popular_series.dart';
 

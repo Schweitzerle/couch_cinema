@@ -118,6 +118,7 @@ class _RecommendedScreenState extends State<RecommendedScreen>
         );
         List<dynamic> ratedMovies = ratedMoviesResults['results'];
 
+
         allRatedMovies.addAll(ratedMovies);
 
         if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||

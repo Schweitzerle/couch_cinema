@@ -4,6 +4,7 @@ import 'package:couch_cinema/api/tmdb_api.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/movies.dart';
+import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
 
-import 'description_series.dart';
+import 'seriesDetail.dart';
 
 class DescriptionMovies extends StatefulWidget {
   final int movieID;
@@ -26,6 +27,7 @@ class DescriptionMovies extends StatefulWidget {
 
 class _DescriptionState extends State<DescriptionMovies> {
   Map<String, dynamic> dataColl = {};
+  List creditData = [];
   late Future<String?> sessionID;
   late String apiKey;
   double voteAverage = 0;
@@ -138,6 +140,14 @@ class _DescriptionState extends State<DescriptionMovies> {
   }
 
   fetchData() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
     String? sessionId = await sessionID;
     int ID = widget.movieID;
     final url = Uri.parse(
@@ -158,7 +168,7 @@ class _DescriptionState extends State<DescriptionMovies> {
         launchOn = dataColl['release_date'];
         description = dataColl['overview'];
         id = dataColl['id'];
-        revenue = dataColl['id'];
+        revenue = dataColl['revenue'];
         runtime = dataColl['runtime'];
         status = dataColl['status'];
         tagline = dataColl['tagline'];
@@ -167,6 +177,11 @@ class _DescriptionState extends State<DescriptionMovies> {
     } else {
       throw Exception('Failed to fetch data');
     }
+
+    Map credits = await tmdbWithCustLogs.v3.movies.getCredits(ID);
+    setState(() {
+      creditData = credits['cast'];
+    });
   }
 
   @override
@@ -195,175 +210,185 @@ class _DescriptionState extends State<DescriptionMovies> {
               ),
             ),
           ),
-          Positioned(
-            top: 100,
-            left: 10,
-            right: 10,
-            child: Container(
-              padding: EdgeInsets.only(left: 10, right: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title != null ? title : 'Not Loaded',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Row(
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(top: 100),
+              child: Flexible(
+                child: Container(
+                  padding: EdgeInsets.only(left: 10, right: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Stack(
+                      Text(
+                        title != null ? title : 'Not Loaded',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Row(
                         children: [
-                          Container(
-                            height: 200,
-                            width: 140,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.network(
-                                posterUrl,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 1,
-                            left: 1,
-                            child: Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color:
-                                    PopularSeries.getCircleColor(voteAverage),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  voteAverage.toStringAsFixed(2),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                          Stack(
+                            children: [
+                              dataColl['poster_path'] != null ?
+                              Container(
+                                height: 200,
+                                width: 140,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    posterUrl,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ) : Container(),
+                              Positioned(
+                                bottom: 1,
+                                left: 1,
+                                child: Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: PopularSeries.getCircleColor(
+                                        voteAverage),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      voteAverage.toStringAsFixed(2),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
+                            ],
+                          ),
+                          SizedBox(width: 10),
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 10),
+                                Container(
+                                  child: Text(
+                                    tagline,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Container(
+                                  child: Text(
+                                    'Status: $status',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Container(
+                                  child: Text(
+                                    'Release: $launchOn',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Container(
+                                  child: Text(
+                                    'Runtime: $runtime minutes',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Container(
+                                  child: Text(
+                                    'Budget: \$${budget.toString()}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Container(
+                                  child: Text(
+                                    'Revenue: \$${revenue.toString()}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(width: 10),
+                      SizedBox(height: 20),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text(
+                            'Description:',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           SizedBox(height: 10),
-                          Container(
+                          SingleChildScrollView(
                             child: Text(
-                              tagline,
+                              description,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                               ),
                             ),
                           ),
-                          SizedBox(height: 10),
-                          Container(
-                            child: Text(
-                              'Status: $status',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Container(
-                            child: Text(
-                              'Release: $launchOn',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Container(
-                            child: Text(
-                              'Runtime: $runtime minutes',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Container(
-                            child: Text(
-                              'Budget: \$${budget.toString()}',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Container(
-                            child: Text(
-                              'Revenue: \$${revenue.toString()}',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
+                          PeopleScreen(
+                              people: creditData.length < 10
+                                  ? creditData
+                                  : creditData.sublist(0, 10),
+                              allPeople: creditData,
+                              title: 'Cast and Crew',
+                              buttonColor: Color(0xff540126)),
+                          MoviesScreen(
+                            movies: recommendedMovies.length < 10
+                                ? recommendedMovies
+                                : recommendedMovies.sublist(0, 10),
+                            allMovies: recommendedMovies,
+                            title: 'Recommended Movies',
+                            buttonColor: Color(0xff540126),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  SizedBox(height: 20),
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Description:',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        SingleChildScrollView(
-                          child: Text(
-                            description,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        MoviesScreen(
-                          movies: recommendedMovies.length < 10
-                              ? recommendedMovies
-                              : recommendedMovies.sublist(0, 10),
-                          allMovies: recommendedMovies,
-                          title: 'Recommended Movies',
-                          buttonColor: Color(0xff540126),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
           Positioned(
-            bottom: 30,
+            bottom:20,
             right: 30,
             child: FoldableOptions(
               id: id,

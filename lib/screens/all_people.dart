@@ -1,33 +1,48 @@
-import 'package:couch_cinema/seriesDetail.dart';
+
+import 'package:couch_cinema/peopleDetail.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:tmdb_api/tmdb_api.dart';
 
 import '../movieDetail.dart';
+import '../utils/SessionManager.dart';
 import '../utils/text.dart';
 import '../widgets/popular_series.dart';
 
-class AllRatedSeriesScreen extends StatelessWidget {
-  final List ratedSeries;
+class AllPeopleScreen extends StatefulWidget {
+  final List people;
+  final String title;
   final Color appBarColor;
 
-  const AllRatedSeriesScreen({Key? key, required this.ratedSeries, required this.appBarColor});
+  AllPeopleScreen({super.key, required this.people, required this.title, required this.appBarColor});
+
+  @override
+  _AllPeopleState createState() => _AllPeopleState();
+}
+
+class _AllPeopleState extends State<AllPeopleScreen> {
+
+
+
 
   @override
   Widget build(BuildContext context) {
+    print(widget.people.toString());
     double _w = MediaQuery.of(context).size.width;
     int columnCount = 2;
+    double initRating = 0;
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: appBarColor,
+        backgroundColor: widget.appBarColor,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              "Rated Series",
+              widget.title,
               style: TextStyle(
                 color: Colors.white,
               ),
@@ -48,7 +63,7 @@ class AllRatedSeriesScreen extends StatelessWidget {
             mainAxisSpacing: 16, // Add spacing between grid items vertically
             crossAxisSpacing: 16, // Add spacing between grid items horizontally
             children: List.generate(
-              ratedSeries.length,
+              widget.people.length,
                   (int index) {
                 return AnimationConfiguration.staggeredGrid(
                   position: index,
@@ -59,70 +74,63 @@ class AllRatedSeriesScreen extends StatelessWidget {
                     curve: Curves.fastLinearToSlowEaseIn,
                     child: FadeInAnimation(
                       child: InkWell(
+                        onLongPress: () {
+                          /*getUserMovieRating(widget.movies[index]['id']);
+                          print('Rat: '+initRating.toString());
+                          MovieDialogHelper.showMovieRatingDialog(context, initRating, rating, widget.movies[index]['id']);
+                        */},
                         onTap: () {
                           HapticFeedback.lightImpact();
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DescriptionSeries(seriesID: ratedSeries[index]['id'], isMovie: false)
+                              builder: (context) => DescriptionPeople(peopleID: widget.people[index]['id'], isMovie: true)
                             ),
                           );
                         },
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                              Container(
-                                width: 250,
-                                height: 140,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  image: DecorationImage(
-                                    image: NetworkImage(
-                                      'https://image.tmdb.org/t/p/w500' +
-                                          ratedSeries[index]['backdrop_path'],
-                                    ),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                child: Align(
-                                  alignment: Alignment.bottomRight,
+                        child: widget.people[index]['profile_path'] != null
+                            ?
+                            Column(
+                              children: [
+                                Flexible(
                                   child: Container(
-                                    margin: EdgeInsets.all(1),
-                                    width: 50,
-                                    height: 50,
+                                    height: 200,
                                     decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(ratedSeries[index]['vote_average'])),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        ratedSeries[index]['vote_average'].toStringAsFixed(1),
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                      borderRadius: BorderRadius.circular(20),
+                                      image: DecorationImage(
+                                        image: NetworkImage(
+                                          'https://image.tmdb.org/t/p/w500' +
+                                              widget.people[index]['profile_path'],
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-
-                            SizedBox(height: 8),
-                            Container(
-                              margin: EdgeInsets.symmetric(horizontal: 16), // Add horizontal margin
-                              child: Expanded(
-                                child: mod_Text(
-                                  text: ratedSeries[index]['original_name'] != null
-                                      ? ratedSeries[index]['original_name']
+                                mod_Text(
+                                  text: widget.people[index]['name'] != null
+                                      ? widget.people[index]['name']
                                       : 'Loading',
                                   color: Colors.white,
                                   size: 14,
                                 ),
-                              ),
-                            ),
-                          ],
-                        ),
+                                mod_Text(
+                                  text: widget.people[index]['known_for_department'] != null
+                                      ? widget.people[index]['known_for_department']
+                                      : 'Loading',
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                mod_Text(
+                                  text: widget.people[index]['character'] != null
+                                      ? '(' + widget.people[index]['character'] + ')'
+                                      : widget.people[index]['job'],
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+
+                              ],
+                            )
+                            :Container(),
                       ),
                     ),
                   ),
@@ -134,6 +142,5 @@ class AllRatedSeriesScreen extends StatelessWidget {
       ),
     );
   }
-
-
 }
+

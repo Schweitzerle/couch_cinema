@@ -1,4 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:couch_cinema/peopleDetail.dart';
 import 'package:couch_cinema/screens/all_movies.dart';
+import 'package:couch_cinema/screens/all_people.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
@@ -6,13 +9,18 @@ import 'package:flutter/services.dart';
 
 import '../movieDetail.dart';
 
-class MoviesScreen extends StatelessWidget {
-  final List movies;
-  final List allMovies;
+class PeopleScreen extends StatelessWidget {
+  final List people;
+  final List allPeople;
   final String title;
   final Color buttonColor;
 
-  const MoviesScreen({Key? key, required this.movies, required this.allMovies, required this.title, required this.buttonColor})
+  const PeopleScreen(
+      {Key? key,
+      required this.people,
+      required this.allPeople,
+      required this.title,
+      required this.buttonColor})
       : super(key: key);
 
   @override
@@ -32,8 +40,10 @@ class MoviesScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AllMoviesScreen(
-                        movies: allMovies, title: title, appBarColor: buttonColor,
+                      builder: (context) => AllPeopleScreen(
+                        people: allPeople,
+                        title: title,
+                        appBarColor: buttonColor,
                       ),
                     ),
                   );
@@ -42,7 +52,7 @@ class MoviesScreen extends StatelessWidget {
                   primary: buttonColor, // Set custom background color
                   shape: RoundedRectangleBorder(
                     borderRadius:
-                    BorderRadius.circular(10), // Set custom corner radius
+                        BorderRadius.circular(10), // Set custom corner radius
                   ),
                 ),
                 child: Text('All'),
@@ -53,7 +63,7 @@ class MoviesScreen extends StatelessWidget {
           SizedBox(
             height: 270,
             child: ListView.builder(
-              itemCount: movies.length,
+              itemCount: people.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
                 return InkWell(
@@ -61,55 +71,56 @@ class MoviesScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => DescriptionMovies(movieID: movies[index]['id'], isMovie: true)
-                      ),
+                          builder: (context) => DescriptionPeople(
+                                peopleID: people[index]['id'],
+                                isMovie: true,
+                              )),
                     );
                   },
                   child: SizedBox(
                     width: 140,
                     child: Column(
                       children: [
-                        movies[index]['poster_path'] != null ?
                         Flexible(
                           child: Container(
                             height: 200,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              image: DecorationImage(
-                                image: NetworkImage(
-                                  'https://image.tmdb.org/t/p/w500' +
-                                      movies[index]['poster_path'],
-                                ),
-                              ),
-                            ),
-                            child: Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Container(
-                                width: 50,
-                                height: 50,
+                            child: CachedNetworkImage(
+                              imageUrl: people[index]['profile_path'] != null ? 'https://image.tmdb.org/t/p/w500' +
+                                  people[index]['profile_path'] : 'Failed Path',
+                              imageBuilder: (context, imageProvider) =>
+                                  Container(
                                 decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: PopularSeries.getCircleColor(
-                                      PopularSeries.parseDouble(movies[index]['vote_average'])),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    movies[index]['vote_average'].toStringAsFixed(1),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  image: DecorationImage(
+                                    image: imageProvider,
                                   ),
                                 ),
                               ),
+                              placeholder: (context, url) =>
+                                  CircularProgressIndicator(),
+                              errorWidget: (context, url, error) =>
+                                  Icon(Icons.error),
                             ),
                           ),
-                        ) : Container(),
+                        ),
                         mod_Text(
-                          text: movies[index]['original_title'] != null
-                              ? movies[index]['original_title']
+                          text: people[index]['name'] != null
+                              ? people[index]['name']
                               : 'Loading',
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                        mod_Text(
+                          text: people[index]['known_for_department'] != null
+                              ? people[index]['known_for_department']
+                              : 'Loading',
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                        mod_Text(
+                          text: people[index]['character'] != null
+                              ? '(' + people[index]['character'] + ')'
+                              : people[index]['job'],
                           color: Colors.white,
                           size: 14,
                         ),
@@ -124,6 +135,4 @@ class MoviesScreen extends StatelessWidget {
       ),
     );
   }
-
-
 }

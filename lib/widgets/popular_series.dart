@@ -1,9 +1,9 @@
-import 'package:couch_cinema/description_series.dart';
+import 'package:couch_cinema/seriesDetail.dart';
 import 'package:couch_cinema/utils/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../description.dart';
+import '../movieDetail.dart';
 
 class PopularSeries extends StatelessWidget {
   final List popularSeries;

@@ -1,12 +1,12 @@
 import 'dart:convert';
-import 'package:couch_cinema/description_series.dart';
+import 'package:couch_cinema/seriesDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 
-import '../description.dart';
+import '../movieDetail.dart';
 import '../utils/text.dart';
 import '../widgets/popular_series.dart';
 
@@ -89,7 +89,6 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
                             child: InkWell(
                               onTap: () {
                                 HapticFeedback.lightImpact();
-                                print(films[index]['id']);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -100,81 +99,86 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
                                   ),
                                 );
                               },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 140,
-                                    height: 200,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      image: DecorationImage(
-                                        image: films[index]['poster_path'] !=
-                                            null
-                                            ? NetworkImage(
-                                          'https://image.tmdb.org/t/p/w200' +
-                                              films[index]['poster_path'],
-                                        )
-                                            : NetworkImage(
-                                            'https://placehold.co/600x400'),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    child: Align(
-                                      alignment: Alignment.bottomRight,
-                                      child: Container(
-                                        margin: EdgeInsets.all(1),
-                                        width: 50,
-                                        height: 50,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: PopularSeries.getCircleColor(
-                                              PopularSeries.parseDouble(films[index]['vote_average'])),
+                              child: Flexible(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 140,
+                                      height: 200,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        image: DecorationImage(
+                                          image: films[index]['poster_path'] !=
+                                              null
+                                              ? NetworkImage(
+                                            'https://image.tmdb.org/t/p/w200' +
+                                                films[index]['poster_path'],
+                                          )
+                                              : NetworkImage(
+                                              'https://placehold.co/600x400'),
+                                          fit: BoxFit.cover,
                                         ),
-                                        child: Center(
-                                          child: Text(
-                                            films[index]['vote_average'] != null ? films[index]['vote_average'].toStringAsFixed(1) : '0',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
+                                      ),
+                                      child: Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Container(
+                                          margin: EdgeInsets.all(1),
+                                          width: 50,
+                                          height: 50,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: PopularSeries.getCircleColor(
+                                                PopularSeries.parseDouble(films[index]['vote_average'])),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              films[index]['vote_average'] != null ? films[index]['vote_average'].toStringAsFixed(1) : '0',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Column(
-                                    children: [
-                                      Container(
-                                        margin:
-                                        EdgeInsets.symmetric(horizontal: 16),
-                                        child: Expanded(
-                                          child: mod_Text(
-                                            text: films[index]['title'] ??
-                                                films[index]['name'],
-                                            color: Colors.white,
-                                            size: 14,
+                                    SizedBox(height: 8),
+                                    
+                                    Flexible(
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            margin:
+                                            EdgeInsets.symmetric(horizontal: 16),
+                                            child: Expanded(
+                                              child: mod_Text(
+                                                text: films[index]['title'] ??
+                                                    films[index]['name'],
+                                                color: Colors.white,
+                                                size: 14,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                      Container(
-                                        margin:
-                                        EdgeInsets.symmetric(horizontal: 16),
-                                        child: Expanded(
-                                          child: mod_Text(
-                                            text: '(${films[index]['release_date'] ?? films[index]['first_air_date']})',
-                                            color: Colors.white,
-                                            size: 14,
+                                          Container(
+                                            margin:
+                                            EdgeInsets.symmetric(horizontal: 16),
+                                            child: Expanded(
+                                              child: mod_Text(
+                                                text: '(${films[index]['release_date'] ?? films[index]['first_air_date']})',
+                                                color: Colors.white,
+                                                size: 14,
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                        ]
+
                                       ),
-                                    ]
+                                    )
 
-                                  )
-
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

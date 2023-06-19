@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:couch_cinema/api/tmdb_api.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
+import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:couch_cinema/widgets/series.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,7 +25,8 @@ class DescriptionSeries extends StatefulWidget {
 }
 
 class _DescriptionSeriesState extends State<DescriptionSeries> {
-  Map<String, dynamic> dataColl = {};
+  Map<String, dynamic> movieData = {};
+  List creditData = [];
   late Future<String?> sessionID;
   String? apiKey;
   double voteAverage = 0;
@@ -138,6 +140,14 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   }
 
   fetchData() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
     int ID = widget.seriesID;
     final url = Uri.parse(
         'https://api.themoviedb.org/3/tv/$ID?api_key=$apiKey&session_id=$sessionID');
@@ -147,23 +157,27 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
-        dataColl = data;
-        voteAverage = PopularSeries.parseDouble(dataColl['vote_average']) ?? 0.0;
-        title = dataColl['original_name'] ?? '';
-        bannerUrl = 'https://image.tmdb.org/t/p/w500' + (dataColl['backdrop_path'] ?? '');
-        launchOn = dataColl['first_air_date'] ?? '';
-        description = dataColl['overview'] ?? '';
-        id = dataColl['id'] ?? 0;
-        inProduction = dataColl['in_production'] ?? '';
-        numberOfEpisodes = dataColl['number_of_episodes'] ?? 0;
-        numberOfSeasons = dataColl['number_of_seasons'] ?? 0;
-        type = dataColl['type'] ?? '';
-        status = dataColl['status'] ?? '';
-        tagline = dataColl['tagline'] ?? '';
+        movieData = data;
+        voteAverage = PopularSeries.parseDouble(movieData['vote_average']) ?? 0.0;
+        title = movieData['original_name'] ?? '';
+        bannerUrl = 'https://image.tmdb.org/t/p/w500' + (movieData['backdrop_path'] ?? '');
+        launchOn = movieData['first_air_date'] ?? '';
+        description = movieData['overview'] ?? '';
+        id = movieData['id'] ?? 0;
+        inProduction = movieData['in_production'] ?? '';
+        numberOfEpisodes = movieData['number_of_episodes'] ?? 0;
+        numberOfSeasons = movieData['number_of_seasons'] ?? 0;
+        type = movieData['type'] ?? '';
+        status = movieData['status'] ?? '';
+        tagline = movieData['tagline'] ?? '';
       });
     } else {
       throw Exception('Failed to fetch data');
     }
+    Map credits = await tmdbWithCustLogs.v3.tv.getCredits(ID);
+    setState(() {
+      creditData = credits['cast'];
+    });
   }
 
   @override
@@ -184,7 +198,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
               child: Stack(
                 children: [
                   Image.network(
-                    'https://image.tmdb.org/t/p/w500' + (dataColl['backdrop_path'] ?? ''),
+                    'https://image.tmdb.org/t/p/w500' + (movieData['backdrop_path'] ?? ''),
                     fit: BoxFit.cover,
                     color: Color.fromRGBO(0, 0, 0, 0.6),
                     colorBlendMode: BlendMode.darken,
@@ -193,154 +207,157 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
               ),
             ),
           ),
-          Positioned(
-            top: 100,
-            left: 10,
-            right: 10,
-            child: Container(
-              padding: EdgeInsets.only(left: 10, right: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Text(
-                      title ?? 'Not Loaded',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  SizedBox(height: 10),
-                  Row(
+      Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(top: 100),
+                child: Container(
+                  padding: EdgeInsets.only(left: 10, right: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Stack(
-                        children: [
-                          Container(
-                            height: 200,
-                            width: 140,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.network(
-                                'https://image.tmdb.org/t/p/w500' + (dataColl['poster_path'] ?? ''),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 1,
-                            left: 1,
-                            child: Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: PopularSeries.getCircleColor(
-                                    voteAverage),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  voteAverage.toStringAsFixed(1),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 10),
-                          Text(
-                            tagline,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Type: $type',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Status: $status',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'In production: ' + inProduction.toString(),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Release: ' + launchOn ?? '',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Seasons: $numberOfSeasons ($numberOfEpisodes Episodes)',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 20),
-                        Text(
-                          'Description:',
+                       Text(
+                          title ?? 'Not Loaded',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 10),
-                        Text(
-                          description,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
+                      SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Stack(
+                            children: [
+                              Container(
+                                height: 200,
+                                width: 140,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    'https://image.tmdb.org/t/p/w500' + (movieData['poster_path'] ?? ''),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 1,
+                                left: 1,
+                                child: Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: PopularSeries.getCircleColor(
+                                        voteAverage),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      voteAverage.toStringAsFixed(1),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          SizedBox(width: 10),
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 10),
+                                Text(
+                                  tagline,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'Type: $type',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'Status: $status',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'In production: ' + inProduction.toString(),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'Release: ' + launchOn ?? '',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'Seasons: $numberOfSeasons ($numberOfEpisodes Episodes)',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 20),
+                            Text(
+                              'Description:',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              description,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            PeopleScreen(people: creditData.length <10 ? creditData: creditData.sublist(0, 10), allPeople: creditData, title: 'Cast and Crew', buttonColor: Color(0xff540126)),
+                            SeriesScreen(series: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series',)
+                          ],
                         ),
-                        SeriesScreen(series: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series',)
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
           Positioned(
-            bottom: 30,
+            bottom: 20,
             right: 30,
             child: FoldableOptions(id: id, isMovie: false, isRated: isRated, initRating: initialRating,),
           ),

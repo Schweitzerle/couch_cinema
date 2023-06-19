@@ -1,4 +1,4 @@
-import 'package:couch_cinema/description_series.dart';
+import 'package:couch_cinema/seriesDetail.dart';
 import 'package:couch_cinema/screens/all_rated_series.dart';
 import 'package:couch_cinema/screens/all_movies.dart';
 import 'package:couch_cinema/screens/all_series.dart';
@@ -7,7 +7,7 @@ import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../description.dart';
+import '../movieDetail.dart';
 
 class SeriesScreen extends StatelessWidget {
   final List series;
@@ -70,52 +70,54 @@ class SeriesScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    width: 250,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 250,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            image: DecorationImage(
-                              image: NetworkImage(
-                                'https://image.tmdb.org/t/p/w500${show['backdrop_path']}',
+                  child: Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      width: 250,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 250,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              image: DecorationImage(
+                                image: NetworkImage(
+                                  'https://image.tmdb.org/t/p/w500${show['backdrop_path']}',
+                                ),
+                                fit: BoxFit.cover,
                               ),
-                              fit: BoxFit.cover,
                             ),
-                          ),
-                          child: Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: PopularSeries.getCircleColor(PopularSeries.parseDouble(show['vote_average'])),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  show['vote_average'].toStringAsFixed(1),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                            child: Align(
+                              alignment: Alignment.bottomLeft,
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: PopularSeries.getCircleColor(PopularSeries.parseDouble(show['vote_average'])),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    show['vote_average'].toStringAsFixed(1),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        mod_Text(
-                          text: name,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ],
+                          const SizedBox(height: 10),
+                          mod_Text(
+                            text: name,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

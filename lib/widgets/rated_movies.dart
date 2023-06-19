@@ -5,7 +5,7 @@ import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../description.dart';
+import '../movieDetail.dart';
 
 class RatedMovies extends StatelessWidget {
   final List ratedMovies;
