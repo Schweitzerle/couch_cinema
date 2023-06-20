@@ -53,6 +53,7 @@ dependencies:
   firebase_database: ^10.2.3
   number_slide_animation: ^0.2.1
   cached_network_image: ^3.2.3
+  shimmer: ^2.0.0
 
 dev_dependencies:
   flutter_test:

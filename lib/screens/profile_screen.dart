@@ -68,9 +68,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
       // Use the imageUrl as needed (e.g., display the image in a Flutter app)
 
-      imagePath = imageUrl;
-      username = userNamePath;
-      name = namePath;
+      setState(() {
+        imagePath = imageUrl;
+        username = userNamePath;
+        name = namePath;
+      });
+
     } else {
       print('Error: ${sessionId}');
     }

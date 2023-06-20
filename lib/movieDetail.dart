@@ -6,6 +6,7 @@ import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/movies.dart';
 import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
+import 'package:couch_cinema/widgets/watchProviders.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
 
+import 'Database/WatchProvider.dart';
 import 'seriesDetail.dart';
 
 class DescriptionMovies extends StatefulWidget {
@@ -28,6 +30,7 @@ class DescriptionMovies extends StatefulWidget {
 class _DescriptionState extends State<DescriptionMovies> {
   Map<String, dynamic> dataColl = {};
   List creditData = [];
+  List<WatchProvider> watchProvidersList = [];
   late Future<String?> sessionID;
   late String apiKey;
   double voteAverage = 0;
@@ -46,14 +49,53 @@ class _DescriptionState extends State<DescriptionMovies> {
   bool isRated = false;
   List recommendedMovies = [];
 
+  bool watchlistState = false;
+
   @override
   void initState() {
     super.initState();
     sessionID = SessionManager.getSessionId();
     apiKey = TMDBApiService.getApiKey();
     fetchData();
-    getUserMovieRating(widget.movieID);
+    getUserRating();
     getRecommendedMovies();
+  }
+
+  Future<void> getUserRating() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    String? sessionId = await SessionManager.getSessionId();
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.movies.getAccountStatus(widget.movieID, sessionId: sessionId);
+
+// Extract the data from the ratedMovieResult
+    int? movieId = ratedMovieResult['id'];
+    bool favorite = ratedMovieResult['favorite'];
+    double ratedValue = 0.0; // Default value is 0.0
+
+    if (ratedMovieResult['rated'] is Map<String, dynamic>) {
+      Map<String, dynamic> ratedData = ratedMovieResult['rated'];
+      ratedValue = ratedData['value']?.toDouble() ?? 0.0;
+    }
+
+    bool watchlist = ratedMovieResult['watchlist'];
+
+
+    setState(() {
+      initialRating = ratedValue;
+      isRated = ratedValue == 0.0 ? false : true;
+      watchlistState = watchlist;
+    });
+// Print the extracted data
+    print('Movie ID: $movieId');
+    print('Favorite: $favorite');
+    print('Rated Value: $initialRating');
+    print('Watchlist: $watchlistState');
+
   }
 
   Future<void> getRecommendedMovies() async {
@@ -72,7 +114,7 @@ class _DescriptionState extends State<DescriptionMovies> {
 
     while (hasMoreRecomMoviePages) {
       Map<dynamic, dynamic> watchlistResults =
-          await tmdbWithCustLogs.v3.movies.getRecommended(
+      await tmdbWithCustLogs.v3.movies.getRecommended(
         widget.movieID,
         page: recomMoviesPage,
       );
@@ -90,53 +132,6 @@ class _DescriptionState extends State<DescriptionMovies> {
     setState(() {
       recommendedMovies = allRecommendedSeries;
     });
-  }
-
-  Future<void> getUserMovieRating(int movieId) async {
-    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken =
-        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-
-    String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
-
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(apiKey, readAccToken),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
-
-    List<dynamic> allRatedMovies = [];
-    int ratedMoviesPage = 1;
-    bool hasMoreRatedMoviesPages = true;
-
-    while (hasMoreRatedMoviesPages) {
-      Map<dynamic, dynamic> ratedMoviesResults =
-          await tmdbWithCustLogs.v3.account.getRatedMovies(
-        sessionId!,
-        accountId!,
-        page: ratedMoviesPage,
-      );
-      List<dynamic> ratedMovies = ratedMoviesResults['results'];
-
-      allRatedMovies.addAll(ratedMovies);
-
-      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
-          ratedMovies.isEmpty) {
-        hasMoreRatedMoviesPages = false;
-      } else {
-        ratedMoviesPage++;
-      }
-    }
-
-    for (var movie in allRatedMovies) {
-      if (movie['id'] == movieId) {
-        setState(() {
-          initialRating = movie['rating'];
-          isRated = true;
-        });
-        return movie['rating'];
-      }
-    }
   }
 
   fetchData() async {
@@ -182,6 +177,25 @@ class _DescriptionState extends State<DescriptionMovies> {
     setState(() {
       creditData = credits['cast'];
     });
+
+    Map<String, dynamic> watchProviderData = await tmdbWithCustLogs.v3.movies.getWatchProviders(ID);
+
+    watchProviderData['results'].forEach((country, data) {
+      String link = data['link'];
+      List<Map<String, dynamic>> flatrate = data['flatrate'] != null ? List.from(data['flatrate']) : [];
+      List<Map<String, dynamic>> rent = data['rent'] != null ? List.from(data['rent']) : [];
+      List<Map<String, dynamic>> buy = data['buy'] != null ? List.from(data['buy']) : [];
+
+      WatchProvider watchProvider = WatchProvider(
+        country: country,
+        link: link,
+        flatrate: flatrate,
+        rent: rent,
+        buy: buy,
+      );
+
+      watchProvidersList.add(watchProvider);
+    });
   }
 
   @override
@@ -220,7 +234,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title != null ? title : 'Not Loaded',
+                        title != '' ? title : 'Not Loaded',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
@@ -364,6 +378,8 @@ class _DescriptionState extends State<DescriptionMovies> {
                               ),
                             ),
                           ),
+                          SizedBox(height: 10,),
+                          WatchProvidersScreen(watchProviders: watchProvidersList),
                           PeopleScreen(
                               people: creditData.length < 10
                                   ? creditData
@@ -394,7 +410,8 @@ class _DescriptionState extends State<DescriptionMovies> {
               id: id,
               isMovie: true,
               isRated: isRated,
-              initRating: initialRating,
+              initRating: initialRating, watchlistState: watchlistState,
+
             ),
           ),
         ],
@@ -408,13 +425,14 @@ class FoldableOptions extends StatefulWidget {
   final bool isMovie;
   final bool isRated;
   final double initRating;
+  final bool watchlistState;
 
   const FoldableOptions(
       {super.key,
-      required this.id,
-      required this.isMovie,
-      required this.isRated,
-      required this.initRating});
+        required this.id,
+        required this.isMovie,
+        required this.isRated,
+        required this.initRating, required this.watchlistState});
 
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
@@ -499,6 +517,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
   @override
   void initState() {
+    print(widget.watchlistState.toString());
     super.initState();
     setIDs();
     controller = AnimationController(vsync: this, duration: duration);
@@ -511,7 +530,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
         Tween<Alignment>(begin: Alignment.centerRight, end: Alignment.topLeft)
             .animate(anim);
     thirdAnim = Tween<Alignment>(
-            begin: Alignment.centerRight, end: Alignment.centerLeft)
+        begin: Alignment.centerRight, end: Alignment.centerLeft)
         .animate(anim);
 
     verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
@@ -528,7 +547,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     while (hasMoreListPages) {
       Map<dynamic, dynamic> listResults =
-          await tmdbWithCustLogs.v3.account.getCreatedLists(
+      await tmdbWithCustLogs.v3.account.getCreatedLists(
         sessionId!,
         accountId!,
         page: listPage,
@@ -551,6 +570,9 @@ class _FoldableOptionsState extends State<FoldableOptions>
         }
       }
     }
+
+
+
   }
 
   Future<void> fetchWatchlist() async {
@@ -568,7 +590,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     while (hasMoreSeriesWatchlistPages) {
       Map<dynamic, dynamic> watchlistResults =
-          await tmdbWithCustLogs.v3.account.getTvShowWatchList(
+      await tmdbWithCustLogs.v3.account.getTvShowWatchList(
         sessionId!,
         accountId!,
         page: watchlistSeriesPage,
@@ -592,7 +614,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     while (hasMoreWatchlistPages) {
       Map<dynamic, dynamic> watchlistResults =
-          await tmdbWithCustLogs.v3.account.getMovieWatchList(
+      await tmdbWithCustLogs.v3.account.getMovieWatchList(
         sessionId!,
         accountId!,
         page: watchlistPage,
@@ -676,7 +698,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                   padding: EdgeInsets.only(left: 37),
                   child: getItem(
                     options.elementAt(0),
-                    () {
+                        () {
                       HapticFeedback.lightImpact();
                       tmdbWithCustLogs.v3.lists.addItem(
                           sessionId, moviesListId.toString(), widget.id);
@@ -688,7 +710,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                 alignment: secondAnim.value,
                 child: Container(
                   padding:
-                      EdgeInsets.only(left: 37, top: verticalPadding.value),
+                  EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
                       isAddedToWatchlist
                           ? Icons.bookmark
@@ -702,12 +724,12 @@ class _FoldableOptionsState extends State<FoldableOptions>
                 alignment: thirdAnim.value,
                 child: Container(
                   padding:
-                      EdgeInsets.only(left: 37, top: verticalPadding.value),
+                  EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
                     widget.isRated
                         ? CupertinoIcons.star_fill
                         : CupertinoIcons.star,
-                    () {
+                        () {
                       //Handle third button tap
                       HapticFeedback.lightImpact();
                       MovieDialogHelper.showMovieRatingDialog(
@@ -728,7 +750,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                     controller.isCompleted || controller.isAnimating
                         ? Icons.close
                         : Icons.add,
-                    () {
+                        () {
                       // Handle primary button tap
                       HapticFeedback.lightImpact();
                     },
@@ -752,7 +774,7 @@ class MovieDialogHelper {
         return AlertDialog(
           shadowColor: Color(0xff690257),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Rate This Movie',
             style: TextStyle(color: Colors.white, fontSize: 22),

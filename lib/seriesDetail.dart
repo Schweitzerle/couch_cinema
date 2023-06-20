@@ -6,12 +6,15 @@ import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:couch_cinema/widgets/series.dart';
+import 'package:couch_cinema/widgets/watchProviders.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
+
+import 'Database/WatchProvider.dart';
 
 class DescriptionSeries extends StatefulWidget {
   final int seriesID;
@@ -27,6 +30,7 @@ class DescriptionSeries extends StatefulWidget {
 class _DescriptionSeriesState extends State<DescriptionSeries> {
   Map<String, dynamic> movieData = {};
   List creditData = [];
+  List<WatchProvider> watchProvidersList = [];
   late Future<String?> sessionID;
   String? apiKey;
   double voteAverage = 0;
@@ -177,6 +181,25 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     Map credits = await tmdbWithCustLogs.v3.tv.getCredits(ID);
     setState(() {
       creditData = credits['cast'];
+    });
+
+    Map<dynamic, dynamic> watchProviderData = await tmdbWithCustLogs.v3.tv.getWatchProviders(ID.toString());
+
+    watchProviderData['results'].forEach((country, data) {
+      String link = data['link'];
+      List<Map<String, dynamic>> flatrate = data['flatrate'] != null ? List.from(data['flatrate']) : [];
+      List<Map<String, dynamic>> rent = data['rent'] != null ? List.from(data['rent']) : [];
+      List<Map<String, dynamic>> buy = data['buy'] != null ? List.from(data['buy']) : [];
+
+      WatchProvider watchProvider = WatchProvider(
+        country: country,
+        link: link,
+        flatrate: flatrate,
+        rent: rent,
+        buy: buy,
+      );
+
+      watchProvidersList.add(watchProvider);
     });
   }
 
@@ -346,6 +369,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                                 fontSize: 16,
                               ),
                             ),
+                            SizedBox(height: 10,),
+                            WatchProvidersScreen(watchProviders: watchProvidersList),
                             PeopleScreen(people: creditData.length <10 ? creditData: creditData.sublist(0, 10), allPeople: creditData, title: 'Cast and Crew', buttonColor: Color(0xff540126)),
                             SeriesScreen(series: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series',)
                           ],
