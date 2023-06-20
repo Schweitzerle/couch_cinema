@@ -51,13 +51,15 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   bool isRated = false;
   List recommendedSeries = [];
 
+  bool watchlistState = false;
+
   @override
   void initState() {
     super.initState();
     sessionID = SessionManager.getSessionId();
     apiKey = TMDBApiService.getApiKey();
     fetchData();
-    getUserSeriesRating(widget.seriesID);
+    getUserRating();
     getRecommendedSeries();
   }
 
@@ -95,55 +97,39 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     });
   }
 
-  Future<void> getUserSeriesRating(int movieId) async {
+  Future<void> getUserRating() async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
     String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
 
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(apiKey, readAccToken),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    List<dynamic> allRatedMovies = [];
-    int ratedMoviesPage = 1;
-    bool hasMoreRatedMoviesPages = true;
+    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.tv.getAccountStatus(widget.seriesID, sessionId: sessionId);
 
-    while (hasMoreRatedMoviesPages) {
-      Map<dynamic, dynamic> ratedMoviesResults =
-      await tmdbWithCustLogs.v3.account.getRatedTvShows(
-        sessionId!,
-        accountId!,
-        page: ratedMoviesPage,
-      );
-      List<dynamic> ratedMovies = ratedMoviesResults['results'];
+// Extract the data from the ratedMovieResult
+    int? seriesId = ratedMovieResult['id'];
+    bool favorite = ratedMovieResult['favorite'];
+    double ratedValue = 0.0; // Default value is 0.0
 
-      allRatedMovies.addAll(ratedMovies);
-
-      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
-          ratedMovies.isEmpty) {
-        hasMoreRatedMoviesPages = false;
-      } else {
-        ratedMoviesPage++;
-      }
+    if (ratedMovieResult['rated'] is Map<String, dynamic>) {
+      Map<String, dynamic> ratedData = ratedMovieResult['rated'];
+      ratedValue = ratedData['value']?.toDouble() ?? 0.0;
     }
 
-    for (var movie in allRatedMovies) {
-      if (movie['id'] == movieId) {
-        setState(() {
-          initialRating = movie['rating'];
-          isRated = true;
-        });
-        return movie['rating'];
-      }
-    }
+    bool watchlist = ratedMovieResult['watchlist'];
 
+
+    setState(() {
+      initialRating = ratedValue;
+      isRated = ratedValue == 0.0 ? false : true;
+      watchlistState = watchlist;
+    });
 
   }
 
-  fetchData() async {
+  Future<void> fetchData() async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
     final readAccToken =
         'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
@@ -277,16 +263,32 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                                         voteAverage),
                                   ),
                                   child: Center(
-                                    child: Text(
-                                      voteAverage.toStringAsFixed(1),
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                      children:[
+                                        Text(
+                                          voteAverage.toStringAsFixed(2),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        initialRating != 0.0 ?
+                                        SizedBox(height: 2):SizedBox(height:0),
+                                        initialRating != 0.0 ?
+                                        Text(
+                                          initialRating.toStringAsFixed(1),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                        ) : Container(),
+                                      ],
                                     ),
-                                  ),
                                 ),
+                              ),
                               ),
                             ],
                           ),
@@ -384,7 +386,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
           Positioned(
             bottom: 20,
             right: 30,
-            child: FoldableOptions(id: id, isMovie: false, isRated: isRated, initRating: initialRating,),
+            child: FoldableOptions(id: id, isMovie: false, isRated: isRated, initRating: initialRating, watchlistState: watchlistState,),
           ),
         ],
       ),
@@ -397,8 +399,9 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   final bool isMovie;
   final double initRating;
   final bool isRated;
+  bool watchlistState;
 
-  const FoldableOptions({super.key, required this.id, required this.isMovie, required this.initRating, required this.isRated});
+  FoldableOptions({super.key, required this.id, required this.isMovie, required this.initRating, required this.isRated, required this.watchlistState});
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
 }
@@ -430,7 +433,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
       ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
       logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-  bool isAddedToWatchlist = false;
 
   Widget getItem(IconData source, VoidCallback onTap) {
     final size = 45.0;
@@ -565,7 +567,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
 
     verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
 
-      fetchWatchlist();
   }
 
   Future<void> setIDs() async {
@@ -604,84 +605,11 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
     }
   }
 
-  Future<void> fetchWatchlist() async {
-    int? accountId = await accountID;
-    String? sessionId = await sessionID;
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
-
-    // Fetch watchlist TV shows
-    List<dynamic> allWatchlistSeries = [];
-    int watchlistSeriesPage = 1;
-    bool hasMoreSeriesWatchlistPages = true;
-
-    while (hasMoreSeriesWatchlistPages) {
-      Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
-        sessionId!,
-        accountId!,
-        page: watchlistSeriesPage,
-      );
-      List<dynamic> watchlistSeries = watchlistResults['results'];
-
-      allWatchlistSeries.addAll(watchlistSeries);
-
-      if (watchlistSeriesPage == watchlistResults['total_pages'] || watchlistSeries.isEmpty) {
-        hasMoreSeriesWatchlistPages = false;
-      } else {
-        watchlistSeriesPage++;
-      }
-    }
-
-    // Fetch watchlist movies
-    List<dynamic> allWatchlistMovies = [];
-    int watchlistPage = 1;
-    bool hasMoreWatchlistPages = true;
-
-    while (hasMoreWatchlistPages) {
-      Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
-        sessionId!,
-        accountId!,
-        page: watchlistPage,
-      );
-      List<dynamic> watchlistMovies = watchlistResults['results'];
-
-      allWatchlistMovies.addAll(watchlistMovies);
-
-      if (watchlistPage == watchlistResults['total_pages'] || watchlistMovies.isEmpty) {
-        hasMoreWatchlistPages = false;
-      } else {
-        watchlistPage++;
-      }
-    }
-
-    // Check if the current item is in the watchlist
-    for (var series in allWatchlistSeries) {
-      if (series['id'] == widget.id) {
-        isAddedToWatchlist = true;
-        break;
-      }
-    }
-    if (!isAddedToWatchlist) {
-      for (var movie in allWatchlistMovies) {
-        if (movie['id'] == widget.id) {
-          isAddedToWatchlist = true;
-          break;
-        }
-      }
-    }
-
-    setState(() {
-      isAddedToWatchlist = isAddedToWatchlist;
-    });
-  }
-
   void toggleWatchlist() {
     setState(() {
-      isAddedToWatchlist = !isAddedToWatchlist;
+      widget.watchlistState = !widget.watchlistState;
     });
-    if (isAddedToWatchlist) {
+    if (widget.watchlistState) {
       // Add to watchlist logic
       addToWatchlist();
     } else {
@@ -832,7 +760,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                 child: Container(
                   padding: EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
-                    isAddedToWatchlist ? Icons.bookmark : Icons.bookmark_border,
+                      widget.watchlistState ? Icons.bookmark : Icons.bookmark_border,
                     () {
                       toggleWatchlist();
                       HapticFeedback.lightImpact;

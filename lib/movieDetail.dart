@@ -90,11 +90,6 @@ class _DescriptionState extends State<DescriptionMovies> {
       isRated = ratedValue == 0.0 ? false : true;
       watchlistState = watchlist;
     });
-// Print the extracted data
-    print('Movie ID: $movieId');
-    print('Favorite: $favorite');
-    print('Rated Value: $initialRating');
-    print('Watchlist: $watchlistState');
 
   }
 
@@ -134,7 +129,7 @@ class _DescriptionState extends State<DescriptionMovies> {
     });
   }
 
-  fetchData() async {
+  Future<void> fetchData() async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
     final readAccToken =
         'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
@@ -273,7 +268,11 @@ class _DescriptionState extends State<DescriptionMovies> {
                                         voteAverage),
                                   ),
                                   child: Center(
-                                    child: Text(
+                                    child: Column(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                        children:[
+                                         Text(
                                       voteAverage.toStringAsFixed(2),
                                       style: TextStyle(
                                         color: Colors.white,
@@ -281,8 +280,20 @@ class _DescriptionState extends State<DescriptionMovies> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                          initialRating != 0.0 ?
+                                    SizedBox(height: 2): SizedBox(height: 0,),
+                                          initialRating != 0.0 ?
+                                    Text(
+                                      initialRating.toStringAsFixed(1),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    ) : Container(),
+                                  ],
                                   ),
                                 ),
+                              ),
                               ),
                             ],
                           ),
@@ -425,9 +436,9 @@ class FoldableOptions extends StatefulWidget {
   final bool isMovie;
   final bool isRated;
   final double initRating;
-  final bool watchlistState;
+  bool watchlistState;
 
-  const FoldableOptions(
+  FoldableOptions(
       {super.key,
         required this.id,
         required this.isMovie,
@@ -459,7 +470,6 @@ class _FoldableOptionsState extends State<FoldableOptions>
   late AnimationController controller;
   final duration = const Duration(milliseconds: 190);
 
-  bool isAddedToWatchlist = false;
 
   int? moviesListId;
   int? accountId;
@@ -534,7 +544,6 @@ class _FoldableOptionsState extends State<FoldableOptions>
         .animate(anim);
 
     verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
-    fetchWatchlist();
   }
 
   Future<void> setIDs() async {
@@ -575,88 +584,12 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
   }
 
-  Future<void> fetchWatchlist() async {
-    int? accountId = await accountID;
-    String? sessionId = await sessionID;
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
-
-    // Fetch watchlist TV shows
-    List<dynamic> allWatchlistSeries = [];
-    int watchlistSeriesPage = 1;
-    bool hasMoreSeriesWatchlistPages = true;
-
-    while (hasMoreSeriesWatchlistPages) {
-      Map<dynamic, dynamic> watchlistResults =
-      await tmdbWithCustLogs.v3.account.getTvShowWatchList(
-        sessionId!,
-        accountId!,
-        page: watchlistSeriesPage,
-      );
-      List<dynamic> watchlistSeries = watchlistResults['results'];
-
-      allWatchlistSeries.addAll(watchlistSeries);
-
-      if (watchlistSeriesPage == watchlistResults['total_pages'] ||
-          watchlistSeries.isEmpty) {
-        hasMoreSeriesWatchlistPages = false;
-      } else {
-        watchlistSeriesPage++;
-      }
-    }
-
-    // Fetch watchlist movies
-    List<dynamic> allWatchlistMovies = [];
-    int watchlistPage = 1;
-    bool hasMoreWatchlistPages = true;
-
-    while (hasMoreWatchlistPages) {
-      Map<dynamic, dynamic> watchlistResults =
-      await tmdbWithCustLogs.v3.account.getMovieWatchList(
-        sessionId!,
-        accountId!,
-        page: watchlistPage,
-      );
-      List<dynamic> watchlistMovies = watchlistResults['results'];
-
-      allWatchlistMovies.addAll(watchlistMovies);
-
-      if (watchlistPage == watchlistResults['total_pages'] ||
-          watchlistMovies.isEmpty) {
-        hasMoreWatchlistPages = false;
-      } else {
-        watchlistPage++;
-      }
-    }
-
-    // Check if the current item is in the watchlist
-    for (var series in allWatchlistSeries) {
-      if (series['id'] == widget.id) {
-        isAddedToWatchlist = true;
-        break;
-      }
-    }
-    if (!isAddedToWatchlist) {
-      for (var movie in allWatchlistMovies) {
-        if (movie['id'] == widget.id) {
-          isAddedToWatchlist = true;
-          break;
-        }
-      }
-    }
-
-    setState(() {
-      isAddedToWatchlist = isAddedToWatchlist;
-    });
-  }
 
   void toggleWatchlist() {
     setState(() {
-      isAddedToWatchlist = !isAddedToWatchlist;
+      widget.watchlistState = !widget.watchlistState;
     });
-    if (isAddedToWatchlist) {
+    if (widget.watchlistState) {
       // Add to watchlist logic
       addToWatchlist();
     } else {
@@ -712,7 +645,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                   padding:
                   EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
-                      isAddedToWatchlist
+                      widget.watchlistState
                           ? Icons.bookmark
                           : Icons.bookmark_border, () {
                     toggleWatchlist();

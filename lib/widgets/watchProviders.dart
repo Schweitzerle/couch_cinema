@@ -115,7 +115,7 @@ class _WatchProvidersScreenState extends State<WatchProvidersScreen> {
         SizedBox(
           height: 80,
           child: ListView.builder(
-            itemCount: 3, // Display 3 shimmer placeholders
+            itemCount: 7, // Display 3 shimmer placeholders
             scrollDirection: Axis.horizontal,
             itemBuilder: (context, index) {
               return _buildShimmerProviderItem();
@@ -129,7 +129,7 @@ class _WatchProvidersScreenState extends State<WatchProvidersScreen> {
   Widget _buildShimmerProviderItem() {
     return Shimmer.fromColors(
       baseColor: Colors.yellow[300]!,
-      highlightColor: Colors.black!,
+      highlightColor: Colors.white54!,
       child: Container(
         margin: const EdgeInsets.only(right: 10),
         width: 80, // Adjust the width as needed

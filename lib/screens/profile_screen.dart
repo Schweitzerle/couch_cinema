@@ -33,17 +33,47 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   int friendsCount = 0;
   List rankedMovies = [];
   List rankedSeries = [];
+  List<User> following = [];
   String? sessionId;
   int? accountId;
   final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
   final readAccToken =
       'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
 
+  late Future<void> _searchUsersFuture;
+
   @override
   initState() {
     super.initState();
+    _searchUsersFuture = _searchUsers();
     loadData();
     setIDs();
+  }
+
+  Future<void> _searchUsers() async {
+    int? _accountId = await accountID;
+    following.clear();
+    final ref = FirebaseDatabase.instance
+        .ref("users")
+        .child(_accountId.toString())
+        .child('following');
+    final snapshot = await ref.get();
+
+    if (snapshot.exists) {
+      final data = snapshot.value as Map<dynamic, dynamic>;
+
+      for (final value in data.values) {
+        final accountId = value['accountId'] as int;
+        final sessionId = value['sessionId'] as String;
+        final user = User(accountId: accountId, sessionId: sessionId);
+        await user.loadUserData();
+        setState(() {
+          following.add(user);
+        });
+      }
+    } else {
+      print('No data available.');
+    }
   }
 
   void loadData() async {
@@ -202,7 +232,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           'Movies Ranked', rankedMovies.length.toString()),
                       _buildProfileStat(
                           'Series Ranked', rankedSeries.length.toString()),
-                      _buildProfileStat('Friends', '0'.toString()),
+                      _buildProfileStat('Followers', following.length.toString()),
                     ],
                   ),
                   SizedBox(height: 70.0,),
