@@ -1,4 +1,3 @@
-import 'package:couch_cinema/widgets/movies.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -7,11 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 
 import '../Database/user.dart';
+import '../widgets/friends_rated_movies.dart';
 import '../widgets/popular_series.dart';
 import '../widgets/rated_movies.dart';
 import '../widgets/rated_series.dart';
 import '../widgets/series.dart';
 import 'package:firebase_database/firebase_database.dart';
+
+import 'movies.dart';
 
 class RecommendedScreen extends StatefulWidget {
   @override
@@ -201,7 +203,7 @@ class _RecommendedScreenState extends State<RecommendedScreen>
                                   ? recommendedMovies
                                   : recommendedMovies.sublist(0, 10),
                               allMovies: recommendedMovies, title: 'Recommended Movies',
-                                buttonColor: Color(0xff690257),
+                                buttonColor: Color(0xff690257), typeOfApiCall: 1,
                             ),
                             SeriesScreen(
                               series: recommendedSeries.length < 10
@@ -226,10 +228,8 @@ class _RecommendedScreenState extends State<RecommendedScreen>
                       } else {
                         return ListView(
                           children: [
-                            RatedMovies(
-                              ratedMovies: ratedMovies.length < 10
-                                  ? ratedMovies
-                                  : ratedMovies.sublist(0, 10),
+                            FriendsRatedMovies(
+                              ratedMovies: ratedMovies.length < 10 ? ratedMovies: ratedMovies.sublist(0, 10),
                               allRatedMovies: ratedMovies, buttonColor: Color(0xff690257),
                             ),
                             RatedSeries(

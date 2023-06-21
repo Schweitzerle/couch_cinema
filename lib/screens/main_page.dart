@@ -1,4 +1,4 @@
-import 'package:couch_cinema/widgets/movies.dart';
+import 'package:couch_cinema/screens/movies.dart';
 import 'package:couch_cinema/widgets/series.dart';
 import 'package:flutter/material.dart';
 import 'package:tmdb_api/tmdb_api.dart';
@@ -75,19 +75,19 @@ class _MainScreenState extends State<MainScreen> {
       backgroundColor: Colors.black,
       body: Padding(padding: EdgeInsets.only(bottom: 50), child: ListView(children: [
         SeriesScreen(series: topratedSeries.length < 10 ? topratedSeries : topratedSeries.sublist(0, 10), allSeries: topratedSeries, title: 'Top Rated Series', buttonColor: Color(0xff540126),),
-        MoviesScreen(movies: topratedMovies.length < 10 ? topratedMovies : topratedMovies.sublist(0, 10), allMovies: topratedMovies, title: 'Top Rated Movies', buttonColor: Color(0xff540126),),
+        MoviesScreen(movies: topratedMovies, allMovies: topratedMovies, title: 'Top Rated Movies', buttonColor: Color(0xff540126), typeOfApiCall: 4,),
 
         SeriesScreen(series: trendingSeries.length < 10 ? trendingSeries : trendingSeries.sublist(0, 10), allSeries: trendingSeries, title: 'Trending Series', buttonColor: Color(0xff540126),),
-        MoviesScreen(movies: trendingMovies.length < 10 ? trendingMovies : trendingMovies.sublist(0, 10), allMovies: trendingMovies, title: 'Trending Movies', buttonColor: Color(0xff540126),),
+        MoviesScreen(movies: trendingMovies, allMovies: trendingMovies, title: 'Trending Movies', buttonColor: Color(0xff540126), typeOfApiCall: 2,),
 
         SeriesScreen(series: popularSeries.length < 10 ? popularSeries : popularSeries.sublist(0, 10), allSeries: popularSeries, title: 'Popular Series', buttonColor: Color(0xff540126),),
-        MoviesScreen(movies: popularMovies.length < 10 ? popularMovies : popularMovies.sublist(0, 10), allMovies: popularMovies, title: 'Popular Movies', buttonColor: Color(0xff540126),),
+        MoviesScreen(movies: popularMovies, allMovies: popularMovies, title: 'Popular Movies', buttonColor: Color(0xff540126), typeOfApiCall: 3,),
 
         SeriesScreen(series: airingTodaySeries.length < 10 ? airingTodaySeries : airingTodaySeries.sublist(0, 10), allSeries: airingTodaySeries, title: 'Airing Today Series', buttonColor: Color(0xff540126),),
-        MoviesScreen(movies: nowPlayingMovies.length < 10 ? nowPlayingMovies : nowPlayingMovies.sublist(0, 10), allMovies: nowPlayingMovies, title: 'Now Playing Movies', buttonColor: Color(0xff540126),),
+        MoviesScreen(movies: nowPlayingMovies, allMovies: nowPlayingMovies, title: 'Now Playing Movies', buttonColor: Color(0xff540126), typeOfApiCall: 6,),
 
         SeriesScreen(series: onTheAirSeries.length < 10 ? onTheAirSeries : onTheAirSeries.sublist(0, 10), allSeries: onTheAirSeries, title: 'On The Air Series', buttonColor: Color(0xff540126),),
-        MoviesScreen(movies: upcomingMovies.length < 10 ? upcomingMovies : upcomingMovies.sublist(0, 10), allMovies: upcomingMovies, title: 'Upcoming Movies', buttonColor: Color(0xff540126),)
+        MoviesScreen(movies: upcomingMovies, allMovies: upcomingMovies, title: 'Upcoming Movies', buttonColor: Color(0xff540126), typeOfApiCall: 5,)
 
       ]),
     ));

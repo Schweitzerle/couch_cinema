@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:couch_cinema/api/tmdb_api.dart';
+import 'package:couch_cinema/screens/movies.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
-import 'package:couch_cinema/widgets/movies.dart';
+import 'package:couch_cinema/widgets/genreWidget.dart';
 import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:couch_cinema/widgets/watchProviders.dart';
@@ -48,6 +49,8 @@ class _DescriptionState extends State<DescriptionMovies> {
   double initialRating = 0.0;
   bool isRated = false;
   List recommendedMovies = [];
+  List similarMovies = [];
+  List<String> genres = [];
 
   bool watchlistState = false;
 
@@ -59,6 +62,7 @@ class _DescriptionState extends State<DescriptionMovies> {
     fetchData();
     getUserRating();
     getRecommendedMovies();
+    getSimilarMovies();
   }
 
   Future<void> getUserRating() async {
@@ -97,35 +101,34 @@ class _DescriptionState extends State<DescriptionMovies> {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
     final readAccToken =
         'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-    String? sessionId = await SessionManager.getSessionId();
-    int? accountId = await SessionManager.getAccountId();
 
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    late List<dynamic> allRecommendedSeries = [];
-    int recomMoviesPage = 1;
-    bool hasMoreRecomMoviePages = true;
-
-    while (hasMoreRecomMoviePages) {
-      Map<dynamic, dynamic> watchlistResults =
+      Map watchlistResults =
       await tmdbWithCustLogs.v3.movies.getRecommended(
         widget.movieID,
-        page: recomMoviesPage,
       );
-      List<dynamic> watchlistSeries = watchlistResults['results'];
 
-      allRecommendedSeries.addAll(watchlistSeries);
-
-      if (recomMoviesPage == watchlistResults['total_pages'] ||
-          watchlistSeries.isEmpty) {
-        hasMoreRecomMoviePages = false;
-      } else {
-        recomMoviesPage++;
-      }
-    }
     setState(() {
-      recommendedMovies = allRecommendedSeries;
+      recommendedMovies = watchlistResults['results'];
+    });
+  }
+
+  Future<void> getSimilarMovies() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+      Map watchlistResults =
+      await tmdbWithCustLogs.v3.movies.getSimilar(
+        widget.movieID,
+      );
+    setState(() {
+      similarMovies = watchlistResults['results'];
     });
   }
 
@@ -163,6 +166,9 @@ class _DescriptionState extends State<DescriptionMovies> {
         status = dataColl['status'];
         tagline = dataColl['tagline'];
         budget = dataColl['budget'];
+        genres = List<String>.from(dataColl['genres']
+            .map((genre) => genre['name'].toString())
+            .toList());
       });
     } else {
       throw Exception('Failed to fetch data');
@@ -335,7 +341,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                                 SizedBox(height: 10),
                                 Container(
                                   child: Text(
-                                    'Runtime: $runtime minutes',
+                                    'Runtime: $runtime m',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -345,9 +351,9 @@ class _DescriptionState extends State<DescriptionMovies> {
                                 SizedBox(height: 10),
                                 Container(
                                   child: Text(
-                                    'Budget: \$${budget.toString()}',
+                                    'Budget: ${budget.toString()}\$',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.red,
                                       fontSize: 16,
                                     ),
                                   ),
@@ -355,9 +361,9 @@ class _DescriptionState extends State<DescriptionMovies> {
                                 SizedBox(height: 10),
                                 Container(
                                   child: Text(
-                                    'Revenue: \$${revenue.toString()}',
+                                    'Revenue: ${revenue.toString()}\$',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.green,
                                       fontSize: 16,
                                     ),
                                   ),
@@ -371,6 +377,11 @@ class _DescriptionState extends State<DescriptionMovies> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          SizedBox(height: 10,),
+                          FittedBox(
+                            child: GenreList(genres: genres),
+                          ),
+                          SizedBox(height: 10,),
                           Text(
                             'Description:',
                             style: TextStyle(
@@ -399,13 +410,12 @@ class _DescriptionState extends State<DescriptionMovies> {
                               title: 'Cast and Crew',
                               buttonColor: Color(0xff540126)),
                           MoviesScreen(
-                            movies: recommendedMovies.length < 10
-                                ? recommendedMovies
-                                : recommendedMovies.sublist(0, 10),
+                            movies: recommendedMovies,
                             allMovies: recommendedMovies,
                             title: 'Recommended Movies',
-                            buttonColor: Color(0xff540126),
+                            buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 1,
                           ),
+                          MoviesScreen(movies: similarMovies, allMovies: similarMovies, title: 'Similar Movies', buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 0,)
                         ],
                       ),
                     ],

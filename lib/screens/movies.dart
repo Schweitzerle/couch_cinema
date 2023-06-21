@@ -14,13 +14,18 @@ class MoviesScreen extends StatefulWidget {
   final List allMovies;
   final String title;
   final Color buttonColor;
+  final int? movieID;
+  final int typeOfApiCall;
+  final int? accountID;
+  final String? sessionID;
+  final int? peopleID;
 
   const MoviesScreen({
     Key? key,
     required this.movies,
     required this.allMovies,
     required this.title,
-    required this.buttonColor,
+    required this.buttonColor, this.movieID, required this.typeOfApiCall, this.accountID, this.sessionID, this.peopleID,
   }) : super(key: key);
 
   @override
@@ -71,7 +76,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
                           AllMoviesScreen(
                             movies: widget.allMovies,
                             title: widget.title,
-                            appBarColor: widget.buttonColor,
+                            appBarColor: widget.buttonColor, movieID: widget.movieID, typeOfApiCall: widget.typeOfApiCall, sessionID: widget.sessionID, accountID: widget.accountID, peopleID: widget.peopleID,
                           ),
                     ),
                   );

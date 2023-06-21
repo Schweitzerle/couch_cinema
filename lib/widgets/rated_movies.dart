@@ -11,8 +11,10 @@ class RatedMovies extends StatelessWidget {
   final List ratedMovies;
   final List allRatedMovies;
   final Color buttonColor;
+  final int? accountID;
+  final String? sessionID;
 
-  const RatedMovies({Key? key, required this.ratedMovies, required this.allRatedMovies, required this.buttonColor}) : super(key: key);
+  const RatedMovies({Key? key, required this.ratedMovies, required this.allRatedMovies, required this.buttonColor, this.accountID, this.sessionID}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class RatedMovies extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => AllRatedMovieScreen(
-                          ratedMovies: allRatedMovies, appBarColor: buttonColor,
+                          ratedMovies: allRatedMovies, appBarColor: buttonColor, accountID: accountID, sessionID: sessionID,
                       ),
                     ),
                   );

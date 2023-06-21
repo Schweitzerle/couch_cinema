@@ -1,5 +1,5 @@
+import 'package:couch_cinema/screens/movies.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
-import 'package:couch_cinema/widgets/movies.dart';
 import 'package:flutter/material.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 
@@ -23,6 +23,8 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
   final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
   final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
   late TabController _tabController;
+  int? accountId = 0;
+  String? sessionId = '';
 
   @override
   void initState() {
@@ -32,8 +34,8 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
   }
 
   loadMovies() async {
-    int? accountId = await accountID;
-    String? sessionId = await sessionID;
+    accountId = await accountID;
+    sessionId = await sessionID;
 
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
@@ -61,48 +63,21 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
     }
 
     // Fetch all watchlist movies from all pages
-    List<dynamic> allWatchlistMovies = [];
-    int watchlistPage = 1;
-    bool hasMoreWatchlistPages = true;
 
-    while (hasMoreWatchlistPages) {
       Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
         sessionId!,
         accountId!,
-        page: watchlistPage,
       );
-      List<dynamic> watchlistMovies = watchlistResults['results'];
 
-      allWatchlistMovies.addAll(watchlistMovies);
 
-      if (watchlistPage == watchlistResults['total_pages'] || watchlistMovies.isEmpty) {
-        hasMoreWatchlistPages = false;
-      } else {
-        watchlistPage++;
-      }
-    }
 
     // Fetch all rated movies from all pages
-    List<dynamic> allRatedMovies = [];
-    int ratedMoviesPage = 1;
-    bool hasMoreRatedMoviesPages = true;
 
-    while (hasMoreRatedMoviesPages) {
       Map<dynamic, dynamic> ratedMoviesResults = await tmdbWithCustLogs.v3.account.getRatedMovies(
         sessionId!,
         accountId!,
-        page: ratedMoviesPage,
       );
-      List<dynamic> ratedMovies = ratedMoviesResults['results'];
 
-      allRatedMovies.addAll(ratedMovies);
-
-      if (ratedMoviesPage == ratedMoviesResults['total_pages'] || ratedMovies.isEmpty) {
-        hasMoreRatedMoviesPages = false;
-      } else {
-        ratedMoviesPage++;
-      }
-    }
 
 
 
@@ -129,9 +104,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
     }
 
     setState(() {
-      watchlistMovies = allWatchlistMovies.reversed.toList();
+      watchlistMovies = watchlistResults['results'].reversed.toList();
       watchlistSeries = allWatchlistSeries.reversed.toList();
-      ratedMovies = allRatedMovies.reversed.toList();
+      ratedMovies = ratedMoviesResults['results'];
       ratedSeries = allRatedSeries.reversed.toList();
     });
   }
@@ -158,13 +133,13 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
                 children: [
                   ListView(
                     children: [
-                      MoviesScreen(movies: watchlistMovies.length < 10 ? watchlistMovies: watchlistMovies.sublist(0, 10), allMovies: watchlistMovies, title: 'Watchlist Movies', buttonColor: Color(0xffd6069b),),
+                      MoviesScreen(movies: watchlistMovies, allMovies: watchlistMovies, title: 'Watchlist Movies', buttonColor: Color(0xffd6069b), typeOfApiCall: 7, accountID: accountId, sessionID:  sessionId,),
                       SeriesScreen(series: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allSeries: watchlistSeries, title: 'Watchlist Series', buttonColor: Color(0xffd6069b),),
                     ],
                   ),
                   ListView(
                     children: [
-                      RatedMovies(ratedMovies: ratedMovies.length < 10 ? ratedMovies: ratedMovies.sublist(0, 10), allRatedMovies: ratedMovies, buttonColor: Color(0xffd6069b),),
+                      RatedMovies(ratedMovies: ratedMovies, allRatedMovies: ratedMovies, buttonColor: Color(0xffd6069b), accountID: accountId, sessionID: sessionId,),
                       RatedSeries(ratedSeries: ratedSeries.length < 10 ? ratedSeries: ratedSeries.sublist(0, 10), allRatedSeries: ratedSeries, buttonColor: Color(0xffd6069b),),
                     ],
                   ),
