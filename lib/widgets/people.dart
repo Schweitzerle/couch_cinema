@@ -110,6 +110,7 @@ class PeopleScreen extends StatelessWidget {
                           color: Colors.white,
                           size: 14,
                         ),
+
                         mod_Text(
                           text: people[index]['known_for_department'] != null
                               ? people[index]['known_for_department']
@@ -120,7 +121,7 @@ class PeopleScreen extends StatelessWidget {
                         mod_Text(
                           text: people[index]['character'] != null
                               ? '(' + people[index]['character'] + ')'
-                              : people[index]['job'],
+                              : people[index]['job'] != null ? people[index]['job'] : '',
                           color: Colors.white,
                           size: 14,
                         ),

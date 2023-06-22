@@ -1,12 +1,3 @@
-import 'package:couch_cinema/seriesDetail.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-
-import '../movieDetail.dart';
-import '../utils/text.dart';
-import '../widgets/popular_series.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,28 +10,20 @@ import '../utils/SessionManager.dart';
 import '../utils/text.dart';
 import '../widgets/popular_series.dart';
 
-
-
-class AllSeriesScreen extends StatefulWidget {
-  final List series;
+class AllListsItemsScreen extends StatefulWidget {
   final String title;
   final Color appBarColor;
-  final int? seriesID;
+  final int listID;
   final int? accountID;
   final String? sessionID;
-  final int typeOfApiCall;
-  final int? peopleID;
 
-  AllSeriesScreen({
+  AllListsItemsScreen({
     Key? key,
-    required this.series,
     required this.title,
     required this.appBarColor,
-    this.seriesID,
+    required this.listID,
     this.accountID,
     this.sessionID,
-    this.peopleID,
-    required this.typeOfApiCall,
   }) : super(key: key);
 
   /*
@@ -49,20 +32,25 @@ class AllSeriesScreen extends StatefulWidget {
   2:Trending
   3:Popular
   4:TopRated
-  5:OnTheAir
-  6:AiringToday
+  5:Upcoming
+  6:Now
   7:Watchlist
   8:PeopleContribution
    */
 
   @override
-  _AllSeriesState createState() => _AllSeriesState();
+  _AllListItemsState createState() => _AllListItemsState();
 }
 
-class _AllSeriesState extends State<AllSeriesScreen> {
+class _AllListItemsState extends State<AllListsItemsScreen> {
   int currentPage = 1;
   bool isLoadingMore = false;
-  List<dynamic> allSeries = [];
+  List<dynamic> allLists = [];
+  String name = '';
+  String description = '';
+  int favoriteCount = 0;
+  String createdBy = '';
+  int itemCount = 0;
 
   final ScrollController _scrollController = ScrollController();
 
@@ -92,7 +80,7 @@ class _AllSeriesState extends State<AllSeriesScreen> {
   void _loadMovies() async {
     final List<dynamic> initialMovies = await _fetchMoviesPage(currentPage);
     setState(() {
-      allSeries.addAll(initialMovies);
+      allLists.addAll(initialMovies);
     });
   }
 
@@ -106,34 +94,13 @@ class _AllSeriesState extends State<AllSeriesScreen> {
       final List<dynamic> nextMovies = await _fetchMoviesPage(nextPage);
 
       setState(() {
-        allSeries.addAll(nextMovies);
+        allLists.addAll(nextMovies);
         currentPage = nextPage;
         isLoadingMore = false;
       });
     }
   }
 
-  Future<double> getUserRating(int seriesID) async {
-    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken =
-        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-    String? sessionId = await SessionManager.getSessionId();
-
-    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
-        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-
-    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.tv
-        .getAccountStatus(seriesID, sessionId: sessionId);
-
-    double ratedValue = 0.0; // Default value is 0.0
-
-    if (ratedMovieResult['rated'] is Map<String, dynamic>) {
-      Map<String, dynamic> ratedData = ratedMovieResult['rated'];
-      ratedValue = ratedData['value']?.toDouble() ?? 0.0;
-    }
-
-    return ratedValue;
-  }
 
   Future<List<dynamic>> _fetchMoviesPage(int page) async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
@@ -147,60 +114,23 @@ class _AllSeriesState extends State<AllSeriesScreen> {
 
     Map<dynamic, dynamic> watchlistResults = {};
 
-    switch (widget.typeOfApiCall) {
-      case 0:
-        watchlistResults = await tmdbWithCustLogs.v3.tv.getSimilar(
-          widget.seriesID!,
-          page: page,
-        );
-        break;
-      case 1:
-        watchlistResults = await tmdbWithCustLogs.v3.tv.getRecommendations(
-          widget.seriesID!,
-          page: page,
-        );
-        break;
-      case 2:
-        watchlistResults = await tmdbWithCustLogs.v3.trending
-            .getTrending(mediaType: MediaType.tv, page: page);
-        break;
-      case 3:
-        watchlistResults =
-        await tmdbWithCustLogs.v3.tv.getPopular(page: page);
-        break;
-      case 4:
-        watchlistResults =
-        await tmdbWithCustLogs.v3.tv.getTopRated(page: page);
-        break;
-      case 5:
-        watchlistResults =
-        await tmdbWithCustLogs.v3.tv.getOnTheAir(page: page);
-        break;
-      case 6:
-        watchlistResults =
-        await tmdbWithCustLogs.v3.tv.getAiringToday(page: page);
-        break;
-      case 7:
-        watchlistResults = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
-          widget.sessionID!,
-          widget.accountID!,
-          page: page,
-        );
-        break;
-      case 8:
-        if (page == 1) {
-          watchlistResults = await tmdbWithCustLogs.v3.people.getTvCredits(
-            widget.peopleID!,
-          );
-        } else {
-          return []; // Return an empty list for subsequent pages
-        }
-        break;
+    if (page == 1) {
+      watchlistResults = await tmdbWithCustLogs.v3.lists.getDetails(
+        widget.listID.toString(),
+      );
+    } else {
+      return []; // Return an empty list for subsequent pages
     }
 
-    List<dynamic> watchlistSeries = widget.typeOfApiCall == 8
-        ? watchlistResults['cast']
-        : watchlistResults['results'];
+    setState(() {
+      name = watchlistResults['name'];
+      description = watchlistResults['description'];
+      createdBy = watchlistResults['created_by'];
+      favoriteCount = watchlistResults['favorite_count'];
+      itemCount = watchlistResults['item_count'];
+
+    });
+    List<dynamic> watchlistSeries = watchlistResults['items'];
 
     return watchlistSeries;
   }
@@ -224,13 +154,13 @@ class _AllSeriesState extends State<AllSeriesScreen> {
         children: [
           GridView.builder(
             controller: _scrollController,
-            itemCount: allSeries.length + 1,
+            itemCount: allLists.length + 1,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               childAspectRatio: 0.6,
             ),
             itemBuilder: (BuildContext context, int index) {
-              if (index == allSeries.length) {
+              if (index == allLists.length) {
                 if (isLoadingMore) {
                   return Container();
                 } else {
@@ -238,18 +168,16 @@ class _AllSeriesState extends State<AllSeriesScreen> {
                 }
               }
 
-              final series = allSeries[index];
-              double voteAverage = double.parse(series['vote_average'].toString());
-              int seriesId = series['id'];
+              final list = allLists[index];
+              double voteAverage = double.parse(list['vote_average'].toString());
+              int movieId = list['id'];
 
               return FutureBuilder<double>(
-                future: getUserRating(seriesId),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return _buildShimmerPlaceholder();
                   } else if (snapshot.hasError) {
-    return _buildErrorContainer(); } else {
-                    double userRating = snapshot.data ?? 0.0;
+                    return _buildErrorContainer(); } else {
 
                     return AnimationConfiguration.staggeredGrid(
                       position: index,
@@ -263,9 +191,9 @@ class _AllSeriesState extends State<AllSeriesScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      DescriptionSeries(
-                                        seriesID: seriesId,
-                                        isMovie: false,
+                                      DescriptionMovies(
+                                        movieID: movieId,
+                                        isMovie: true,
                                       ),
                                 ),
                               );
@@ -277,11 +205,11 @@ class _AllSeriesState extends State<AllSeriesScreen> {
                                 children: [
                                   Expanded(
                                     child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(8),
                                       child: Stack(
                                         children: [
                                           Image.network(
-                                            'https://image.tmdb.org/t/p/w500${series['poster_path']}',
+                                            'https://image.tmdb.org/t/p/w300${list['poster_path']}',
                                             fit: BoxFit.cover,
                                           ),
                                           Align(
@@ -312,18 +240,6 @@ class _AllSeriesState extends State<AllSeriesScreen> {
                                                             .bold,
                                                       ),
                                                     ),
-                                                    if (userRating !=
-                                                        0.0) SizedBox(
-                                                        height: 2),
-                                                    if (userRating != 0.0)
-                                                      Text(
-                                                        userRating
-                                                            .toStringAsFixed(1),
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
                                                   ],
                                                 ),
                                               ),
@@ -333,9 +249,9 @@ class _AllSeriesState extends State<AllSeriesScreen> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(height: 10),
+                                  SizedBox(height: 8),
                                   Text(
-                                    series['original_name'],
+                                    list['title'],
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -363,6 +279,72 @@ class _AllSeriesState extends State<AllSeriesScreen> {
                 child: CircularProgressIndicator(),
               ),
             ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.black.withOpacity(0.7),
+              padding: EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Created by: $createdBy',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Favorites: $favoriteCount',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Items: $itemCount',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -413,4 +395,3 @@ class _AllSeriesState extends State<AllSeriesScreen> {
     );
   }
 }
-

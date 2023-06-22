@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:riverpod_infinite_scroll/riverpod_infinite_scroll.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 
@@ -51,7 +50,6 @@ class AllMoviesScreen extends StatefulWidget {
 
 class _AllSimilarMoviesState extends State<AllMoviesScreen> {
   int currentPage = 1;
-  int itemsPerPage = 10;
   bool isLoadingMore = false;
   List<dynamic> allMovies = [];
 
@@ -104,6 +102,28 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
     }
   }
 
+  Future<double> getUserRating(int movieId) async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    String? sessionId = await SessionManager.getSessionId();
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.movies
+        .getAccountStatus(movieId, sessionId: sessionId);
+
+    double ratedValue = 0.0; // Default value is 0.0
+
+    if (ratedMovieResult['rated'] is Map<String, dynamic>) {
+      Map<String, dynamic> ratedData = ratedMovieResult['rated'];
+      ratedValue = ratedData['value']?.toDouble() ?? 0.0;
+    }
+
+    return ratedValue;
+  }
+
   Future<List<dynamic>> _fetchMoviesPage(int page) async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
     final readAccToken =
@@ -135,19 +155,19 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
         break;
       case 3:
         watchlistResults =
-            await tmdbWithCustLogs.v3.movies.getPopular(page: page);
+        await tmdbWithCustLogs.v3.movies.getPopular(page: page);
         break;
       case 4:
         watchlistResults =
-            await tmdbWithCustLogs.v3.movies.getTopRated(page: page);
+        await tmdbWithCustLogs.v3.movies.getTopRated(page: page);
         break;
       case 5:
         watchlistResults =
-            await tmdbWithCustLogs.v3.movies.getUpcoming(page: page);
+        await tmdbWithCustLogs.v3.movies.getUpcoming(page: page);
         break;
       case 6:
         watchlistResults =
-            await tmdbWithCustLogs.v3.movies.getNowPlaying(page: page);
+        await tmdbWithCustLogs.v3.movies.getNowPlaying(page: page);
         break;
       case 7:
         watchlistResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
@@ -157,167 +177,227 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
         );
         break;
       case 8:
-        watchlistResults = await tmdbWithCustLogs.v3.people.getMovieCredits(
-          widget.peopleID!,
-        );
+        if (page == 1) {
+          watchlistResults = await tmdbWithCustLogs.v3.people.getMovieCredits(
+            widget.peopleID!,
+          );
+        } else {
+          return []; // Return an empty list for subsequent pages
+        }
         break;
     }
 
-    List<dynamic> watchlistSeries = widget.typeOfApiCall == 8 ? watchlistResults['cast'] : watchlistResults['results'];
+    List<dynamic> watchlistSeries = widget.typeOfApiCall == 8
+        ? watchlistResults['cast']
+        : watchlistResults['results'];
 
     return watchlistSeries;
   }
 
+
   @override
   Widget build(BuildContext context) {
-    double _w = MediaQuery.of(context).size.width;
-    int columnCount = 2;
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: widget.appBarColor,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              widget.title,
-              style: TextStyle(
-                color: Colors.white,
+        title: Text(
+          widget.title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      body: Stack(
+        children: [
+          GridView.builder(
+            controller: _scrollController,
+            itemCount: allMovies.length + 1,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.6,
+            ),
+            itemBuilder: (BuildContext context, int index) {
+              if (index == allMovies.length) {
+                if (isLoadingMore) {
+                  return Container();
+                } else {
+                  return SizedBox();
+                }
+              }
+
+              final movie = allMovies[index];
+              double voteAverage = double.parse(movie['vote_average'].toString());
+              int movieId = movie['id'];
+
+              return FutureBuilder<double>(
+                future: getUserRating(movieId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return _buildShimmerPlaceholder();
+                  } else if (snapshot.hasError) {
+    return _buildErrorContainer(); } else {
+                    double userRating = snapshot.data ?? 0.0;
+
+                    return AnimationConfiguration.staggeredGrid(
+                      position: index,
+                      duration: const Duration(milliseconds: 375),
+                      columnCount: 2,
+                      child: ScaleAnimation(
+                        child: FadeInAnimation(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      DescriptionMovies(
+                                        movieID: movieId,
+                                        isMovie: true,
+                                      ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.all(10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Stack(
+                                        children: [
+                                          Image.network(
+                                            'https://image.tmdb.org/t/p/w500${movie['poster_path']}',
+                                            fit: BoxFit.cover,
+                                          ),
+                                          Align(
+                                            alignment: Alignment.bottomLeft,
+                                            child: Container(
+                                              width: 50,
+                                              height: 50,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: PopularSeries
+                                                    .getCircleColor(
+                                                  PopularSeries.parseDouble(
+                                                      voteAverage),
+                                                ),
+                                              ),
+                                              child: Center(
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment
+                                                      .center,
+                                                  children: [
+                                                    Text(
+                                                      voteAverage
+                                                          .toStringAsFixed(1),
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 18,
+                                                        fontWeight: FontWeight
+                                                            .bold,
+                                                      ),
+                                                    ),
+                                                    if (userRating !=
+                                                        0.0) SizedBox(
+                                                        height: 2),
+                                                    if (userRating != 0.0)
+                                                      Text(
+                                                        userRating
+                                                            .toStringAsFixed(1),
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    movie['title'],
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                },
+              );
+            },
+          ),
+          if (isLoadingMore)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                margin: EdgeInsets.only(bottom: 16),
+                child: CircularProgressIndicator(),
               ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerPlaceholder() {
+    return Shimmer.fromColors(
+      baseColor: widget.appBarColor,
+      highlightColor: Colors.grey[600]!,
+      child: Container(
+        margin: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(height: 8),
+            Container(
+              height: 10,
+              color: widget.appBarColor,
             ),
           ],
         ),
-        centerTitle: false,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
-      body: GridView.builder(
-        controller: _scrollController,
-        physics: ScrollPhysics(),
-        shrinkWrap: true,
-        padding: EdgeInsets.all(_w / 60),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: columnCount,
-          childAspectRatio: 2 / 3,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
+    );
+  }
+
+  Widget _buildErrorContainer() {
+    return Container(
+      margin: const EdgeInsets.all(5),
+      width: 250,
+      decoration: BoxDecoration(
+        color: Colors.red,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.error,
+          color: Colors.white,
         ),
-        itemCount: allMovies.length + (isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == allMovies.length) {
-            // Show a loading indicator at the end
-            return Visibility(
-              visible: isLoadingMore,
-              child: Shimmer.fromColors(
-                baseColor: Colors.grey[300]!,
-                highlightColor: Colors.grey[100]!,
-                child: Container(
-                  width: 140,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            );
-          } else {
-            final movie = allMovies[index];
-            return AnimationConfiguration.staggeredGrid(
-              position: index,
-              duration: Duration(milliseconds: 500),
-              columnCount: columnCount,
-              child: ScaleAnimation(
-                duration: Duration(milliseconds: 900),
-                curve: Curves.fastLinearToSlowEaseIn,
-                child: FadeInAnimation(
-                  child: InkWell(
-                    onLongPress: () {},
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DescriptionMovies(
-                            movieID: allMovies[index]['id'],
-                            // Modify this line
-                            isMovie: true,
-                          ),
-                        ),
-                      );
-                    },
-                    child: allMovies[index]['poster_path'] != null
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 140,
-                                height: 200,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  image: DecorationImage(
-                                    image: NetworkImage(
-                                      'https://image.tmdb.org/t/p/w500' +
-                                          allMovies[index][
-                                              'poster_path'], // Modify this line
-                                    ),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                child: Align(
-                                  alignment: Alignment.bottomRight,
-                                  child: Container(
-                                    margin: EdgeInsets.all(1),
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: PopularSeries.getCircleColor(
-                                        PopularSeries.parseDouble(
-                                          allMovies[index][
-                                              'vote_average'], // Modify this line
-                                        ),
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        allMovies[index]['vote_average']
-                                            .toStringAsFixed(
-                                                1), // Modify this line
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Container(
-                                margin: EdgeInsets.symmetric(horizontal: 16),
-                                child: Expanded(
-                                  child: mod_Text(
-                                    text: allMovies[index]['original_title'] !=
-                                            null
-                                        ? allMovies[index][
-                                            'original_title'] // Modify this line
-                                        : 'Loading',
-                                    color: Colors.white,
-                                    size: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Container(),
-                  ),
-                ),
-              ),
-            );
-          }
-        },
       ),
     );
   }

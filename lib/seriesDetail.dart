@@ -374,7 +374,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                             SizedBox(height: 10,),
                             WatchProvidersScreen(watchProviders: watchProvidersList),
                             PeopleScreen(people: creditData.length <10 ? creditData: creditData.sublist(0, 10), allPeople: creditData, title: 'Cast and Crew', buttonColor: Color(0xff540126)),
-                            SeriesScreen(series: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series',)
+                            SeriesScreen(series: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series', typeOfApiCall: 1,)
                           ],
                         ),
                       ),

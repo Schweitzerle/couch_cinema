@@ -1,4 +1,4 @@
-import 'package:couch_cinema/screens/movies.dart';
+import 'package:couch_cinema/widgets/movies.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:flutter/material.dart';
 import 'package:tmdb_api/tmdb_api.dart';
@@ -134,7 +134,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
                   ListView(
                     children: [
                       MoviesScreen(movies: watchlistMovies, allMovies: watchlistMovies, title: 'Watchlist Movies', buttonColor: Color(0xffd6069b), typeOfApiCall: 7, accountID: accountId, sessionID:  sessionId,),
-                      SeriesScreen(series: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allSeries: watchlistSeries, title: 'Watchlist Series', buttonColor: Color(0xffd6069b),),
+                      SeriesScreen(series: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allSeries: watchlistSeries, title: 'Watchlist Series', buttonColor: Color(0xffd6069b), typeOfApiCall: 7, accountID: accountId, sessionID: sessionId,),
                     ],
                   ),
                   ListView(

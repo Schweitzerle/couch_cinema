@@ -13,7 +13,7 @@ import '../widgets/rated_series.dart';
 import '../widgets/series.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-import 'movies.dart';
+import '../widgets/movies.dart';
 
 class RecommendedScreen extends StatefulWidget {
   @override
@@ -210,7 +210,7 @@ class _RecommendedScreenState extends State<RecommendedScreen>
                                   ? recommendedSeries
                                   : recommendedSeries.sublist(0, 10),
                               allSeries: recommendedSeries, title: 'Recommended Series',
-                                buttonColor: Color(0xff690257),
+                                buttonColor: Color(0xff690257), typeOfApiCall: 1,
 
                             ),
                           ],

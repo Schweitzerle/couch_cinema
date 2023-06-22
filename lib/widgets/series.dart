@@ -17,13 +17,18 @@ class SeriesScreen extends StatefulWidget {
   final List allSeries;
   final String title;
   final Color buttonColor;
+  final int? serieID;
+  final int typeOfApiCall;
+  final int? accountID;
+  final String? sessionID;
+  final int? peopleID;
 
   const SeriesScreen({
     Key? key,
     required this.series,
     required this.allSeries,
     required this.title,
-    required this.buttonColor,
+    required this.buttonColor, this.serieID, required this.typeOfApiCall, this.accountID, this.sessionID, this.peopleID,
   }) : super(key: key);
 
   @override
@@ -83,7 +88,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
                       builder: (context) => AllSeriesScreen(
                         series: widget.allSeries,
                         title: widget.title,
-                        appBarColor: widget.buttonColor,
+                        appBarColor: widget.buttonColor, seriesID: widget.serieID, typeOfApiCall: widget.typeOfApiCall, sessionID: widget.sessionID, accountID: widget.accountID, peopleID: widget.peopleID,
                       ),
                     ),
                   );
@@ -214,7 +219,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
   Widget _buildShimmerPlaceholder() {
     return Shimmer.fromColors(
       baseColor: widget.buttonColor,
-      highlightColor: Colors.grey[100]!,
+      highlightColor: Colors.grey[600]!,
       child: Container(
         margin: const EdgeInsets.all(5),
         width: 250,

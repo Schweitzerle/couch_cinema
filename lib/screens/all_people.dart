@@ -123,7 +123,7 @@ class _AllPeopleState extends State<AllPeopleScreen> {
                                 mod_Text(
                                   text: widget.people[index]['character'] != null
                                       ? '(' + widget.people[index]['character'] + ')'
-                                      : widget.people[index]['job'],
+                                      : widget.people[index]['job'] != null ?  widget.people[index]['job'] : '',
                                   color: Colors.white,
                                   size: 14,
                                 ),

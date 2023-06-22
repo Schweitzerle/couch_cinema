@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import 'package:couch_cinema/api/tmdb_api.dart';
-import 'package:couch_cinema/screens/movies.dart';
+import 'package:couch_cinema/widgets/lists.dart';
+import 'package:couch_cinema/widgets/movies.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/genreWidget.dart';
@@ -49,6 +50,7 @@ class _DescriptionState extends State<DescriptionMovies> {
   double initialRating = 0.0;
   bool isRated = false;
   List recommendedMovies = [];
+  List listsIn = [];
   List similarMovies = [];
   List<String> genres = [];
 
@@ -63,6 +65,7 @@ class _DescriptionState extends State<DescriptionMovies> {
     getUserRating();
     getRecommendedMovies();
     getSimilarMovies();
+    getListsIn();
   }
 
   Future<void> getUserRating() async {
@@ -95,6 +98,24 @@ class _DescriptionState extends State<DescriptionMovies> {
       watchlistState = watchlist;
     });
 
+  }
+
+  Future<void> getListsIn() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults =
+    await tmdbWithCustLogs.v3.movies.getLists(
+      widget.movieID,
+    );
+
+    setState(() {
+      listsIn = watchlistResults['results'];
+    });
   }
 
   Future<void> getRecommendedMovies() async {
@@ -415,7 +436,8 @@ class _DescriptionState extends State<DescriptionMovies> {
                             title: 'Recommended Movies',
                             buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 1,
                           ),
-                          MoviesScreen(movies: similarMovies, allMovies: similarMovies, title: 'Similar Movies', buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 0,)
+                          MoviesScreen(movies: similarMovies, allMovies: similarMovies, title: 'Similar Movies', buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 0,),
+                          ListsScreen(lists: listsIn, allMovies: listsIn, title: 'Featured Lists', buttonColor: Color(0xff540126), listID: widget.movieID,),
                         ],
                       ),
                     ],

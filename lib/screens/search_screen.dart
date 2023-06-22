@@ -48,7 +48,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               cursorColor: Colors.black,
-              onChanged: (value) {
+              onSubmitted: (value) {
                 searchFilms(value);
               },
               style: TextStyle(color: Colors.white),
@@ -145,7 +145,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
                                       ),
                                     ),
                                     SizedBox(height: 8),
-                                    
+
                                     Flexible(
                                       child: Column(
                                         children: [

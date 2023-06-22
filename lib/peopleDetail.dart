@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:couch_cinema/api/tmdb_api.dart';
-import 'package:couch_cinema/screens/movies.dart';
+import 'package:couch_cinema/widgets/movies.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/people.dart';
@@ -246,7 +246,7 @@ class _DescriptionState extends State<DescriptionPeople> {
                                       : seriesData.sublist(0, 10),
                                   allSeries: seriesData,
                                   title: 'Series contributed',
-                                  buttonColor: Color(0xff540126))
+                                  buttonColor: Color(0xff540126), typeOfApiCall: 8, peopleID: widget.peopleID,)
                               : Container(),
                         ],
                       ),
