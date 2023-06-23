@@ -1,3 +1,4 @@
+import 'package:couch_cinema/utils/text.dart';
 import 'package:couch_cinema/widgets/friend_overview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -57,6 +58,10 @@ class _RecommendedScreenState extends State<RecommendedScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Followers'),
+        backgroundColor: Color(0xff690257),
+      ),
       backgroundColor: Colors.black,
       body: Stack(
         children: [

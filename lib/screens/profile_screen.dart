@@ -34,8 +34,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   List rankedMovies = [];
   List rankedSeries = [];
   List<User> following = [];
+  int minutesMoviesWatched = 0;
   String? sessionId;
   int? accountId;
+  int addedRuntimeMovies = 0;
   final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
   final readAccToken =
       'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
@@ -49,6 +51,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     loadData();
     setIDs();
   }
+
+  int getMoviesRuntime() {
+    int totalRuntime = 0;
+    for (var movie in rankedMovies) {
+      int runtime = movie['runtime'] ?? 0;
+      totalRuntime += runtime;
+    }
+    print(rankedMovies.length.toString());
+    return totalRuntime;
+  }
+
+
 
   Future<void> _searchUsers() async {
     int? _accountId = await accountID;
@@ -97,6 +111,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       final imageUrl = 'https://image.tmdb.org/t/p/w500$avatarPath';
 
       // Use the imageUrl as needed (e.g., display the image in a Flutter app)
+
 
       setState(() {
         imagePath = imageUrl;
@@ -156,10 +171,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       }
     }
 
+    int moviesRuntime = calculateMoviesRuntime();
+
+
     setState(() {
-      rankedMovies = allRatedMovies;
+      addedRuntimeMovies = moviesRuntime;
+    rankedMovies = allRatedMovies;
       rankedSeries = allRatedSeries;
     });
+  }
+
+  int calculateMoviesRuntime() {
+    int totalRuntime = 0;
+    for (var movie in rankedMovies) {
+      int runtime = movie['runtime'];
+      totalRuntime += runtime;
+    }
+    return totalRuntime;
   }
 
   Future<void> setIDs() async {
@@ -170,14 +198,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('My Profile'),
+        backgroundColor: Color(0xff270140),
+      ),
       backgroundColor: Colors.black,
       body: Column(
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top),
+          SizedBox(height: 5),
           Align(
             alignment: Alignment.topRight,
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(10.0),
               child: ElevatedButton(
                 onPressed: () {
                   logout(context);
@@ -235,7 +267,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       _buildProfileStat('Followers', following.length.toString()),
                     ],
                   ),
-                  SizedBox(height: 70.0,),
+                  SizedBox(height: 5,),
+                  _buildProfileStat(
+                    'Movie Time Watched',
+                    '${getMoviesRuntime()} minutes',
+                  ),
+                  SizedBox(height: 20.0,),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
@@ -261,6 +298,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
+
 
   Widget _buildProfileStat(String label, String value) {
     return Column(

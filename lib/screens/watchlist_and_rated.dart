@@ -114,9 +114,13 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('My Cinema'),
+        backgroundColor: Color(0xffd6069b),
+      ),
       backgroundColor: Colors.black,
       body: Padding(
-        padding: EdgeInsets.only(bottom: 40, top: 40),
+        padding: EdgeInsets.only(bottom: 40),
         child: Column(
           children: [
             TabBar(

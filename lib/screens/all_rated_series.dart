@@ -92,11 +92,11 @@ class AllRatedSeriesScreen extends StatelessWidget {
                                     height: 50,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(ratedSeries[index]['vote_average'])),
+                                      color: PopularSeries.getCircleColor(PopularSeries.parseDouble(ratedSeries[index]['rated'])),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        ratedSeries[index]['vote_average'].toStringAsFixed(1),
+                                        ratedSeries[index]['rated'].toStringAsFixed(1),
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,

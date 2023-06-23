@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:couch_cinema/Database/firebase_database_instance.dart';
 import 'package:couch_cinema/screens/FluidTabBarScreen.dart';
+import 'package:couch_cinema/screens/splash_screen.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,7 +25,7 @@ Future<void> main()  async {
     MaterialApp(
       title: 'CouchCinema',
       debugShowCheckedModeBanner: false,
-      home: MyHomePage(),
+      home:SplashScreen(),
     ),
   );
 }

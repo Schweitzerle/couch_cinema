@@ -83,6 +83,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Discover'),
+        backgroundColor: Color(0xff540126),
+      ),
+
       backgroundColor: Colors.black,
       body: Padding(padding: EdgeInsets.only(bottom: 50), child: ListView(children: [
         SeriesScreen(series: topratedSeries.length < 10 ? topratedSeries : topratedSeries.sublist(0, 10), allSeries: topratedSeries, title: 'Top Rated Series', buttonColor: Color(0xff540126), typeOfApiCall: 4,),
