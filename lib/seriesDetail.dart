@@ -50,6 +50,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   double initialRating = 0.0;
   bool isRated = false;
   List recommendedSeries = [];
+  List similarSeries = [];
 
   bool watchlistState = false;
 
@@ -61,6 +62,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     fetchData();
     getUserRating();
     getRecommendedSeries();
+    getSimilarMovies();
   }
 
   Future<void> getRecommendedSeries() async {
@@ -94,6 +96,23 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     }
     setState(() {
       recommendedSeries = allRecommendedSeries;
+    });
+  }
+
+  Future<void> getSimilarMovies() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults =
+    await tmdbWithCustLogs.v3.tv.getSimilar(
+      widget.seriesID,
+    );
+    setState(() {
+      similarSeries = watchlistResults['results'];
     });
   }
 
@@ -374,7 +393,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                             SizedBox(height: 10,),
                             WatchProvidersScreen(watchProviders: watchProvidersList),
                             PeopleScreen(people: creditData.length <10 ? creditData: creditData.sublist(0, 10), allPeople: creditData, title: 'Cast and Crew', buttonColor: Color(0xff540126)),
-                            SeriesScreen(series: recommendedSeries.length < 10 ? recommendedSeries: recommendedSeries.sublist(0, 10), allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series', typeOfApiCall: 1,)
+                            SeriesScreen(series: recommendedSeries, allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series', typeOfApiCall: 1,),
+                            SeriesScreen(series: similarSeries, allSeries: similarSeries, title: 'Similar Series', buttonColor: Color(0xff540126), typeOfApiCall: 0)
                           ],
                         ),
                       ),

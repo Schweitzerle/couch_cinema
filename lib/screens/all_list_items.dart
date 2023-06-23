@@ -101,6 +101,29 @@ class _AllListItemsState extends State<AllListsItemsScreen> {
     }
   }
 
+  Future<double> getUserRating(int movieId) async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    String? sessionId = await SessionManager.getSessionId();
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.movies
+        .getAccountStatus(movieId, sessionId: sessionId);
+
+    double ratedValue = 0.0; // Default value is 0.0
+
+    if (ratedMovieResult['rated'] is Map<String, dynamic>) {
+      Map<String, dynamic> ratedData = ratedMovieResult['rated'];
+      ratedValue = ratedData['value']?.toDouble() ?? 0.0;
+    }
+
+    return ratedValue;
+  }
+
+
 
   Future<List<dynamic>> _fetchMoviesPage(int page) async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
@@ -169,105 +192,137 @@ class _AllListItemsState extends State<AllListsItemsScreen> {
               }
 
               final list = allLists[index];
-              double voteAverage = double.parse(list['vote_average'].toString());
+              double voteAverage = double.parse(
+                  list['vote_average'].toString());
               int movieId = list['id'];
 
               return FutureBuilder<double>(
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildShimmerPlaceholder();
-                  } else if (snapshot.hasError) {
-                    return _buildErrorContainer(); } else {
+                  future: getUserRating(movieId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return _buildShimmerPlaceholder();
+                    } else if (snapshot.hasError) {
+                      return _buildErrorContainer();
+                    } else {
+                      double userRating = snapshot.data ?? 0.0;
 
-                    return AnimationConfiguration.staggeredGrid(
-                      position: index,
-                      duration: const Duration(milliseconds: 375),
-                      columnCount: 2,
-                      child: ScaleAnimation(
-                        child: FadeInAnimation(
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      DescriptionMovies(
-                                        movieID: movieId,
-                                        isMovie: true,
-                                      ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Stack(
-                                        children: [
-                                          Image.network(
-                                            'https://image.tmdb.org/t/p/w300${list['poster_path']}',
-                                            fit: BoxFit.cover,
-                                          ),
-                                          Align(
-                                            alignment: Alignment.bottomLeft,
-                                            child: Container(
-                                              width: 50,
-                                              height: 50,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: PopularSeries
-                                                    .getCircleColor(
-                                                  PopularSeries.parseDouble(
-                                                      voteAverage),
-                                                ),
+                      return FutureBuilder<double>(
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState
+                              .waiting) {
+                            return _buildShimmerPlaceholder();
+                          } else if (snapshot.hasError) {
+                            return _buildErrorContainer();
+                          } else {
+                            return AnimationConfiguration.staggeredGrid(
+                              position: index,
+                              duration: const Duration(milliseconds: 375),
+                              columnCount: 2,
+                              child: ScaleAnimation(
+                                child: FadeInAnimation(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              DescriptionMovies(
+                                                movieID: movieId,
+                                                isMovie: true,
                                               ),
-                                              child: Center(
-                                                child: Column(
-                                                  mainAxisAlignment: MainAxisAlignment
-                                                      .center,
-                                                  children: [
-                                                    Text(
-                                                      voteAverage
-                                                          .toStringAsFixed(1),
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 18,
-                                                        fontWeight: FontWeight
-                                                            .bold,
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.all(10),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment
+                                            .start,
+                                        children: [
+                                          Expanded(
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius
+                                                  .circular(8),
+                                              child: Stack(
+                                                children: [
+                                                  Image.network(
+                                                    'https://image.tmdb.org/t/p/w300${list['poster_path']}',
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                  Align(
+                                                    alignment: Alignment
+                                                        .bottomLeft,
+                                                    child: Container(
+                                                      width: 50,
+                                                      height: 50,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        color: PopularSeries
+                                                            .getCircleColor(
+                                                          PopularSeries
+                                                              .parseDouble(
+                                                              voteAverage),
+                                                        ),
+                                                      ),
+                                                      child: Center(
+                                                        child: Column(
+                                                          mainAxisAlignment: MainAxisAlignment
+                                                              .center,
+                                                          children: [
+                                                            Text(
+                                                              voteAverage
+                                                                  .toStringAsFixed(
+                                                                  1),
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 18,
+                                                                fontWeight: FontWeight
+                                                                    .bold,
+                                                              ),
+                                                            ),
+                                                            if (userRating != 0.0)
+                                                              SizedBox(height: 2),
+                                                            if (userRating != 0.0)
+                                                              Text(
+                                                                userRating
+                                                                    .toStringAsFixed(1),
+                                                                style: TextStyle(
+                                                                  color: Colors.white,
+                                                                  fontSize: 14,
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
-                                                  ],
-                                                ),
+                                                  ),
+                                                ],
                                               ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            list['title'],
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                   ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    list['title'],
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
+                            );
+                          }
+                        },
+                      );
+                    }
                   }
-                },
               );
             },
           ),

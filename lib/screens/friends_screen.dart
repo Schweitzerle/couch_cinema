@@ -1,4 +1,6 @@
+import 'package:couch_cinema/widgets/friend_overview.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:couch_cinema/utils/SessionManager.dart';
@@ -28,9 +30,10 @@ class _RecommendedScreenState extends State<RecommendedScreen>
   List<dynamic> ratedSeries = [];
   List<User> following = [];
 
-
   final Future<String?> sessionID = SessionManager.getSessionId();
   final Future<int?> accountID = SessionManager.getAccountId();
+  String? sessionId;
+  int? accountId;
   final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
   final readAccToken =
       'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
@@ -40,214 +43,109 @@ class _RecommendedScreenState extends State<RecommendedScreen>
 
   @override
   void initState() {
-    _tabController = TabController(length: 2, vsync: this);
-    _searchUsersFuture = _searchUsers();
+    setIDs();
+    _searchUsers();
     super.initState();
   }
 
-  loadMovies() async {
-    for (int i = 0; i < following.length; i++) {
-      int? accountId = following[i].accountId;
-      String? sessionId = following[i].sessionId;
 
-      TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
-          logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-
-      // Fetch all watchlist movies from all pages
-      late List<dynamic> allLists = [];
-      int listPage = 1;
-      bool hasMoreListPages = true;
-      int seriesListId = 0; // Initialize the seriesId variable outside the loop
-      int movieListId = 0;
-
-      while (hasMoreListPages) {
-        Map<dynamic, dynamic> listResults =
-            await tmdbWithCustLogs.v3.account.getCreatedLists(
-          sessionId!,
-          accountId!,
-          page: listPage,
-        );
-        List<dynamic> lists = listResults['results'];
-
-        allLists.addAll(lists);
-
-        if (listPage == listResults['total_pages'] || lists.isEmpty) {
-          hasMoreListPages = false;
-        } else {
-          listPage++;
-        }
-
-        for (final series in lists) {
-          if (series['name'] == 'CouchCinema Recommended Series') {
-            seriesListId = series['id'];
-            break; // Exit the loop once the matching series is found
-          }
-        }
-
-        for (final series in lists) {
-          if (series['name'] == 'CouchCinema Recommended Movies') {
-            movieListId = series['id'];
-
-            break; // Exit the loop once the matching series is found
-          }
-        }
-      }
-
-      List<dynamic> allRecommendedMovies = [];
-      Map<dynamic, dynamic> reccMovieResults =
-          await tmdbWithCustLogs.v3.lists.getDetails(movieListId.toString());
-      List<dynamic> reccMovies = reccMovieResults['items'];
-      allRecommendedMovies.addAll(reccMovies);
-
-      // Fetch all watchlist movies from all pages
-      List<dynamic> allRecommendedSeries = [];
-      Map<dynamic, dynamic> reccSeriesResults =
-      await tmdbWithCustLogs.v3.lists.getDetails(seriesListId.toString());
-      List<dynamic> reccSeries = reccSeriesResults['items'];
-      allRecommendedMovies.addAll(reccSeries);
-
-      // Fetch all rated movies from all pages
-      List<dynamic> allRatedMovies = [];
-      int ratedMoviesPage = 1;
-      bool hasMoreRatedMoviesPages = true;
-
-      while (hasMoreRatedMoviesPages) {
-        Map<dynamic, dynamic> ratedMoviesResults =
-            await tmdbWithCustLogs.v3.account.getRatedMovies(
-          sessionId!,
-          accountId!,
-          page: ratedMoviesPage,
-        );
-        List<dynamic> ratedMovies = ratedMoviesResults['results'];
-
-
-        allRatedMovies.addAll(ratedMovies);
-
-        if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
-            ratedMovies.isEmpty) {
-          hasMoreRatedMoviesPages = false;
-        } else {
-          ratedMoviesPage++;
-        }
-      }
-
-      // Fetch all rated TV shows from all pages
-      List<dynamic> allRatedSeries = [];
-      int ratedSeriesPage = 1;
-      bool hasMoreRatedSeriesPages = true;
-
-      while (hasMoreRatedSeriesPages) {
-        Map<dynamic, dynamic> ratedSeriesResults =
-            await tmdbWithCustLogs.v3.account.getRatedTvShows(
-          sessionId!,
-          accountId!,
-          page: ratedSeriesPage,
-        );
-        List<dynamic> ratedSeries = ratedSeriesResults['results'];
-
-        allRatedSeries.addAll(ratedSeries);
-
-        if (ratedSeriesPage == ratedSeriesResults['total_pages'] ||
-            ratedSeries.isEmpty) {
-          hasMoreRatedSeriesPages = false;
-        } else {
-          ratedSeriesPage++;
-        }
-      }
-      setState(() {
-        recommendedMovies.addAll(allRecommendedMovies.reversed.toList());
-        recommendedSeries.addAll(allRecommendedSeries.reversed.toList());
-        ratedMovies.addAll(allRatedMovies.reversed.toList());
-        ratedSeries.addAll(allRatedSeries.reversed.toList());
-      });
+    Future<void> setIDs() async {
+      accountId = await accountID;
+      sessionId = await sessionID;
     }
-  }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Padding(
-        padding: EdgeInsets.only(bottom: 40, top: 40),
-        child: Column(
-          children: [
-            TabBar(
-              controller: _tabController,
-              tabs: [
-                Tab(text: 'Friend Recommendations'),
-                Tab(text: 'Friend Ratings'),
-              ],
-              indicatorColor: Color(0xff690257),
-            ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  FutureBuilder(
-                    future: _searchUsersFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator(
-                          value: 5,
-                          color: Color(0xff690257),
-                        );
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        return ListView(
-                          children: [
-
-                            MoviesScreen(
-                              movies: recommendedMovies.length < 10
-                                  ? recommendedMovies
-                                  : recommendedMovies.sublist(0, 10),
-                              allMovies: recommendedMovies, title: 'Recommended Movies',
-                                buttonColor: Color(0xff690257), typeOfApiCall: 1,
-                            ),
-                            SeriesScreen(
-                              series: recommendedSeries.length < 10
-                                  ? recommendedSeries
-                                  : recommendedSeries.sublist(0, 10),
-                              allSeries: recommendedSeries, title: 'Recommended Series',
-                                buttonColor: Color(0xff690257), typeOfApiCall: 1,
-
-                            ),
-                          ],
-                        );
-                      }
-                    },
-                  ),
-                  FutureBuilder(
-                    future: _searchUsersFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else {
-                        return ListView(
-                          children: [
-                            FriendsRatedMovies(
-                              ratedMovies: ratedMovies.length < 10 ? ratedMovies: ratedMovies.sublist(0, 10),
-                              allRatedMovies: ratedMovies, buttonColor: Color(0xff690257),
-                            ),
-                            RatedSeries(
-                              ratedSeries: ratedSeries.length < 10
-                                  ? ratedSeries
-                                  : ratedSeries.sublist(0, 10),
-                              allRatedSeries: ratedSeries, buttonColor: Color(0xff690257),
-                            ),
-                          ],
-                        );
-                      }
-                    },
-                  ),
-                ],
+      body: Stack(
+        children: [
+          AnimationLimiter(
+            child: GridView.builder(
+              itemCount: following.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.7,
               ),
+              itemBuilder: (context, index) {
+                final user = following[index];
+                //_searchFollowers(context, accountId.toString(), user.accountId.toString());
+                return AnimationConfiguration.staggeredGrid(
+                    position: index,
+                    duration: Duration(milliseconds: 500),
+                    columnCount: 2,
+                    child: ScaleAnimation(
+                      duration: Duration(milliseconds: 900),
+                      curve: Curves.fastLinearToSlowEaseIn,
+                      child: FadeInAnimation(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                builder: (context) => FriendScreen(accountID: user.accountId, sessionID: user.sessionId, appBarColor: Color(0xff690257), title: 'Friend Screen', user: user,)
+                            ),
+                            );
+                          },
+                          child: Container(
+                            margin: EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF242323),
+                              borderRadius: BorderRadius.circular(10.0),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                              CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  height: 200,
+                                  width: 140,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.network(
+                                      user.imagePath,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    children: [
+                                      Row(children: [
+                                        Text(
+                                          user.username,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ])
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ));
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -276,7 +174,5 @@ class _RecommendedScreenState extends State<RecommendedScreen>
     } else {
       print('No data available.');
     }
-
-    loadMovies();
   }
 }

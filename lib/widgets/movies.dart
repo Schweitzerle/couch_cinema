@@ -101,6 +101,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
             ],
           ),
           const SizedBox(height: 10),
+          widget.movies.length != 0 ?
           SizedBox(
             height: 270,
             child: ListView.builder(
@@ -210,7 +211,9 @@ class _MoviesScreenState extends State<MoviesScreen> {
                 );
               },
             ),
-          ),
+          ) : Container(height: 200 ,child: Center(
+            child: mod_Text(text: 'Nothing recommended yet :/', color: widget.buttonColor, size: 22),),
+          )
         ],
       ),
     );

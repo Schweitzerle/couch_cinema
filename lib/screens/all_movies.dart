@@ -155,19 +155,19 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
         break;
       case 3:
         watchlistResults =
-        await tmdbWithCustLogs.v3.movies.getPopular(page: page);
+            await tmdbWithCustLogs.v3.movies.getPopular(page: page);
         break;
       case 4:
         watchlistResults =
-        await tmdbWithCustLogs.v3.movies.getTopRated(page: page);
+            await tmdbWithCustLogs.v3.movies.getTopRated(page: page);
         break;
       case 5:
         watchlistResults =
-        await tmdbWithCustLogs.v3.movies.getUpcoming(page: page);
+            await tmdbWithCustLogs.v3.movies.getUpcoming(page: page);
         break;
       case 6:
         watchlistResults =
-        await tmdbWithCustLogs.v3.movies.getNowPlaying(page: page);
+            await tmdbWithCustLogs.v3.movies.getNowPlaying(page: page);
         break;
       case 7:
         watchlistResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
@@ -193,7 +193,6 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
 
     return watchlistSeries;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +227,8 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
               }
 
               final movie = allMovies[index];
-              double voteAverage = double.parse(movie['vote_average'].toString());
+              double voteAverage =
+                  double.parse(movie['vote_average'].toString());
               int movieId = movie['id'];
 
               return FutureBuilder<double>(
@@ -237,7 +237,8 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return _buildShimmerPlaceholder();
                   } else if (snapshot.hasError) {
-    return _buildErrorContainer(); } else {
+                    return _buildErrorContainer();
+                  } else {
                     double userRating = snapshot.data ?? 0.0;
 
                     return AnimationConfiguration.staggeredGrid(
@@ -251,11 +252,10 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      DescriptionMovies(
-                                        movieID: movieId,
-                                        isMovie: true,
-                                      ),
+                                  builder: (context) => DescriptionMovies(
+                                    movieID: movieId,
+                                    isMovie: true,
+                                  ),
                                 ),
                               );
                             },
@@ -288,8 +288,8 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
                                               ),
                                               child: Center(
                                                 child: Column(
-                                                  mainAxisAlignment: MainAxisAlignment
-                                                      .center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
                                                   children: [
                                                     Text(
                                                       voteAverage
@@ -297,13 +297,12 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
                                                       style: TextStyle(
                                                         color: Colors.white,
                                                         fontSize: 18,
-                                                        fontWeight: FontWeight
-                                                            .bold,
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                       ),
                                                     ),
-                                                    if (userRating !=
-                                                        0.0) SizedBox(
-                                                        height: 2),
+                                                    if (userRating != 0.0)
+                                                      SizedBox(height: 2),
                                                     if (userRating != 0.0)
                                                       Text(
                                                         userRating

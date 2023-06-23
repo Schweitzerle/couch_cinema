@@ -1,3 +1,4 @@
+import 'package:couch_cinema/screens/all_list_items.dart';
 import 'package:couch_cinema/screens/all_lists.dart';
 import 'package:couch_cinema/screens/all_movies.dart';
 import 'package:couch_cinema/utils/text.dart';
@@ -100,9 +101,8 @@ class _ListsScreenState extends State<ListsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DescriptionMovies(
-                                movieID: movieId,
-                                isMovie: true,
+                              builder: (context) => AllListsItemsScreen(
+                                listID: movieId, title: widget.title, appBarColor: widget.buttonColor,
                               ),
                             ),
                           );
