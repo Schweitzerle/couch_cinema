@@ -52,14 +52,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     setIDs();
   }
 
-  int getMoviesRuntime() {
+  Future<void> getMoviesRuntime() async {
     int totalRuntime = 0;
-    for (var movie in rankedMovies) {
-      int runtime = movie['runtime'] ?? 0;
+    print(rankedMovies.length);
+    print(rankedMovies.toString());
+    for (int i = 0; i < rankedMovies.length; i++) {
+      int runtime = rankedMovies[i]['runtime'] ??0;
+      print(runtime.toString());
       totalRuntime += runtime;
     }
-    print(rankedMovies.length.toString());
-    return totalRuntime;
+
+    setState(() {
+      addedRuntimeMovies = totalRuntime;
+    });
   }
 
 
@@ -171,24 +176,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       }
     }
 
-    int moviesRuntime = calculateMoviesRuntime();
 
 
     setState(() {
-      addedRuntimeMovies = moviesRuntime;
     rankedMovies = allRatedMovies;
       rankedSeries = allRatedSeries;
     });
+
+    getMoviesRuntime();
   }
 
-  int calculateMoviesRuntime() {
-    int totalRuntime = 0;
-    for (var movie in rankedMovies) {
-      int runtime = movie['runtime'];
-      totalRuntime += runtime;
-    }
-    return totalRuntime;
-  }
 
   Future<void> setIDs() async {
     accountId = await accountID;
@@ -270,7 +267,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   SizedBox(height: 5,),
                   _buildProfileStat(
                     'Movie Time Watched',
-                    '${getMoviesRuntime()} minutes',
+                    '${addedRuntimeMovies.toString()} minutes',
                   ),
                   SizedBox(height: 20.0,),
                   ElevatedButton(

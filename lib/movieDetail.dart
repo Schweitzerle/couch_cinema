@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:couch_cinema/api/tmdb_api.dart';
+import 'package:couch_cinema/widgets/images.dart';
 import 'package:couch_cinema/widgets/lists.dart';
 import 'package:couch_cinema/widgets/movies.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
@@ -53,6 +54,8 @@ class _DescriptionState extends State<DescriptionMovies> {
   List listsIn = [];
   List similarMovies = [];
   List<String> genres = [];
+  List imagePaths = [];
+
 
   bool watchlistState = false;
 
@@ -66,6 +69,7 @@ class _DescriptionState extends State<DescriptionMovies> {
     getRecommendedMovies();
     getSimilarMovies();
     getListsIn();
+    getImages();
   }
 
   Future<void> getUserRating() async {
@@ -116,6 +120,34 @@ class _DescriptionState extends State<DescriptionMovies> {
     setState(() {
       listsIn = watchlistResults['results'];
     });
+  }
+
+  Future<void> getImages() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    String? sessionId = await SessionManager.getSessionId();
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults =
+    await tmdbWithCustLogs.v3.movies.getImages(
+      widget.movieID,
+    );
+
+    final response = await http.get(Uri.parse(
+        'https://api.themoviedb.org/3/movie/${widget.movieID}/images?api_key=$apiKey&session_id=$sessionId'));
+
+    if (response.statusCode == 200) {
+      Map data = json.decode(response.body);
+
+      // Access the avatar path from the response data
+
+    setState(() {
+      imagePaths = data['posters'];
+    });
+    }
   }
 
   Future<void> getRecommendedMovies() async {
@@ -437,6 +469,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                             buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 1,
                           ),
                           MoviesScreen(movies: similarMovies, allMovies: similarMovies, title: 'Similar Movies', buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 0,),
+                          ImageScreen(images: imagePaths.length < 10 ? imagePaths: imagePaths.sublist(0, 20), movieID: widget.movieID, title: 'Images', buttonColor: Color(0xff540126), backdrop: false, overview: true, isMovie: true,),
                           ListsScreen(lists: listsIn, allMovies: listsIn, title: 'Featured Lists', buttonColor: Color(0xff540126), listID: widget.movieID,),
                         ],
                       ),
