@@ -469,7 +469,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                             buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 1,
                           ),
                           MoviesScreen(movies: similarMovies, allMovies: similarMovies, title: 'Similar Movies', buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 0,),
-                          ImageScreen(images: imagePaths.length < 10 ? imagePaths: imagePaths.sublist(0, 20), movieID: widget.movieID, title: 'Images', buttonColor: Color(0xff540126), backdrop: false, overview: true, isMovie: true,),
+                          ImageScreen(images: imagePaths, movieID: widget.movieID, title: 'Images', buttonColor: Color(0xff540126), backdrop: false, overview: true, isMovie: true,),
                           ListsScreen(lists: listsIn, allMovies: listsIn, title: 'Featured Lists', buttonColor: Color(0xff540126), listID: widget.movieID,),
                         ],
                       ),

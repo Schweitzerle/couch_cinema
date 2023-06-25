@@ -12,6 +12,7 @@ class User {
   String imagePath;
   String name;
   String username;
+  bool isSelected;
 
   User({
     required this.accountId,
@@ -20,6 +21,7 @@ class User {
     this.imagePath = '',
     this.name = '',
     this.username = '',
+    this.isSelected = false,
   }): followingUsers = followingUsers ?? [];
 
 
@@ -28,6 +30,7 @@ class User {
       'accountId': accountId,
       'sessionId': sessionId,
       'followingUsers': followingUsers.map((user) => user.toMap()).toList(),
+      'isFollowing': isSelected,
     };
   }
 
@@ -39,6 +42,8 @@ class User {
       imagePath: map['imagePath'] ?? '',
       name: map['name'] ?? '',
       username: map['username'] ?? '',
+      isSelected: map['isFollowing'] ?? false,
+
     );
   }
 
