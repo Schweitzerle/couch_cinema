@@ -9,6 +9,7 @@ import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/genreWidget.dart';
 import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
+import 'package:couch_cinema/widgets/reviews.dart';
 import 'package:couch_cinema/widgets/watchProviders.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +56,8 @@ class _DescriptionState extends State<DescriptionMovies> {
   List similarMovies = [];
   List<String> genres = [];
   List imagePaths = [];
-
+  List reviews = [];
+  List<String> keywords = [];
 
   bool watchlistState = false;
 
@@ -70,6 +72,8 @@ class _DescriptionState extends State<DescriptionMovies> {
     getSimilarMovies();
     getListsIn();
     getImages();
+    getReviews();
+    getKeywords();
   }
 
   Future<void> getUserRating() async {
@@ -81,7 +85,8 @@ class _DescriptionState extends State<DescriptionMovies> {
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.movies.getAccountStatus(widget.movieID, sessionId: sessionId);
+    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.movies
+        .getAccountStatus(widget.movieID, sessionId: sessionId);
 
 // Extract the data from the ratedMovieResult
     int? movieId = ratedMovieResult['id'];
@@ -95,13 +100,11 @@ class _DescriptionState extends State<DescriptionMovies> {
 
     bool watchlist = ratedMovieResult['watchlist'];
 
-
     setState(() {
       initialRating = ratedValue;
       isRated = ratedValue == 0.0 ? false : true;
       watchlistState = watchlist;
     });
-
   }
 
   Future<void> getListsIn() async {
@@ -112,13 +115,31 @@ class _DescriptionState extends State<DescriptionMovies> {
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    Map watchlistResults =
-    await tmdbWithCustLogs.v3.movies.getLists(
+    Map watchlistResults = await tmdbWithCustLogs.v3.movies.getLists(
       widget.movieID,
     );
 
     setState(() {
       listsIn = watchlistResults['results'];
+    });
+  }
+
+  Future<void> getKeywords() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults = await tmdbWithCustLogs.v3.movies.getKeywords(
+      widget.movieID,
+    );
+
+    setState(() {
+      keywords = List<String>.from(watchlistResults['keywords']
+          .map((genre) => genre['name'].toString())
+          .toList());
     });
   }
 
@@ -131,8 +152,7 @@ class _DescriptionState extends State<DescriptionMovies> {
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    Map watchlistResults =
-    await tmdbWithCustLogs.v3.movies.getImages(
+    Map watchlistResults = await tmdbWithCustLogs.v3.movies.getImages(
       widget.movieID,
     );
 
@@ -144,9 +164,9 @@ class _DescriptionState extends State<DescriptionMovies> {
 
       // Access the avatar path from the response data
 
-    setState(() {
-      imagePaths = data['posters'];
-    });
+      setState(() {
+        imagePaths = data['posters'];
+      });
     }
   }
 
@@ -158,13 +178,28 @@ class _DescriptionState extends State<DescriptionMovies> {
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-      Map watchlistResults =
-      await tmdbWithCustLogs.v3.movies.getRecommended(
-        widget.movieID,
-      );
+    Map watchlistResults = await tmdbWithCustLogs.v3.movies.getRecommended(
+      widget.movieID,
+    );
 
     setState(() {
       recommendedMovies = watchlistResults['results'];
+    });
+  }
+
+  Future<void> getReviews() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults = await tmdbWithCustLogs.v3.movies.getReviews(
+      widget.movieID,
+    );
+    setState(() {
+      reviews = watchlistResults['results'];
     });
   }
 
@@ -176,10 +211,9 @@ class _DescriptionState extends State<DescriptionMovies> {
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-      Map watchlistResults =
-      await tmdbWithCustLogs.v3.movies.getSimilar(
-        widget.movieID,
-      );
+    Map watchlistResults = await tmdbWithCustLogs.v3.movies.getSimilar(
+      widget.movieID,
+    );
     setState(() {
       similarMovies = watchlistResults['results'];
     });
@@ -232,13 +266,17 @@ class _DescriptionState extends State<DescriptionMovies> {
       creditData = credits['cast'];
     });
 
-    Map<String, dynamic> watchProviderData = await tmdbWithCustLogs.v3.movies.getWatchProviders(ID);
+    Map<String, dynamic> watchProviderData =
+        await tmdbWithCustLogs.v3.movies.getWatchProviders(ID);
 
     watchProviderData['results'].forEach((country, data) {
       String link = data['link'];
-      List<Map<String, dynamic>> flatrate = data['flatrate'] != null ? List.from(data['flatrate']) : [];
-      List<Map<String, dynamic>> rent = data['rent'] != null ? List.from(data['rent']) : [];
-      List<Map<String, dynamic>> buy = data['buy'] != null ? List.from(data['buy']) : [];
+      List<Map<String, dynamic>> flatrate =
+          data['flatrate'] != null ? List.from(data['flatrate']) : [];
+      List<Map<String, dynamic>> rent =
+          data['rent'] != null ? List.from(data['rent']) : [];
+      List<Map<String, dynamic>> buy =
+          data['buy'] != null ? List.from(data['buy']) : [];
 
       WatchProvider watchProvider = WatchProvider(
         country: country,
@@ -300,21 +338,22 @@ class _DescriptionState extends State<DescriptionMovies> {
                         children: [
                           Stack(
                             children: [
-                              dataColl['poster_path'] != null ?
-                              Container(
-                                height: 200,
-                                width: 140,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    posterUrl,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ) : Container(),
+                              dataColl['poster_path'] != null
+                                  ? Container(
+                                      height: 200,
+                                      width: 140,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.network(
+                                          posterUrl,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    )
+                                  : Container(),
                               Positioned(
                                 bottom: 1,
                                 left: 1,
@@ -328,31 +367,36 @@ class _DescriptionState extends State<DescriptionMovies> {
                                   ),
                                   child: Center(
                                     child: Column(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                        children:[
-                                         Text(
-                                      voteAverage.toStringAsFixed(2),
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          voteAverage.toStringAsFixed(2),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        initialRating != 0.0
+                                            ? SizedBox(height: 2)
+                                            : SizedBox(
+                                                height: 0,
+                                              ),
+                                        initialRating != 0.0
+                                            ? Text(
+                                                initialRating
+                                                    .toStringAsFixed(1),
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                ),
+                                              )
+                                            : Container(),
+                                      ],
                                     ),
-                                          initialRating != 0.0 ?
-                                    SizedBox(height: 2): SizedBox(height: 0,),
-                                          initialRating != 0.0 ?
-                                    Text(
-                                      initialRating.toStringAsFixed(1),
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                      ),
-                                    ) : Container(),
-                                  ],
                                   ),
                                 ),
-                              ),
                               ),
                             ],
                           ),
@@ -430,11 +474,23 @@ class _DescriptionState extends State<DescriptionMovies> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 10,),
-                          FittedBox(
-                            child: GenreList(genres: genres),
+                          SizedBox(
+                            height: 10,
                           ),
-                          SizedBox(height: 10,),
+                          FittedBox(
+                            child: GenreList(genres: genres, color: Color(0xff540126),),
+                          ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                            GenreList(
+                              genres: keywords,
+                              color: Color(0xff690257),
+                            ),
+
+                          SizedBox(
+                            height: 10,
+                          ),
                           Text(
                             'Description:',
                             style: TextStyle(
@@ -453,8 +509,11 @@ class _DescriptionState extends State<DescriptionMovies> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 10,),
-                          WatchProvidersScreen(watchProviders: watchProvidersList),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          WatchProvidersScreen(
+                              watchProviders: watchProvidersList),
                           PeopleScreen(
                               people: creditData.length < 10
                                   ? creditData
@@ -466,11 +525,38 @@ class _DescriptionState extends State<DescriptionMovies> {
                             movies: recommendedMovies,
                             allMovies: recommendedMovies,
                             title: 'Recommended Movies',
-                            buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 1,
+                            buttonColor: Color(0xff540126),
+                            movieID: widget.movieID,
+                            typeOfApiCall: 1,
                           ),
-                          MoviesScreen(movies: similarMovies, allMovies: similarMovies, title: 'Similar Movies', buttonColor: Color(0xff540126), movieID: widget.movieID, typeOfApiCall: 0,),
-                          ImageScreen(images: imagePaths, movieID: widget.movieID, title: 'Images', buttonColor: Color(0xff540126), backdrop: false, overview: true, isMovie: true,),
-                          ListsScreen(lists: listsIn, allMovies: listsIn, title: 'Featured Lists', buttonColor: Color(0xff540126), listID: widget.movieID,),
+                          MoviesScreen(
+                            movies: similarMovies,
+                            allMovies: similarMovies,
+                            title: 'Similar Movies',
+                            buttonColor: Color(0xff540126),
+                            movieID: widget.movieID,
+                            typeOfApiCall: 0,
+                          ),
+                          ImageScreen(
+                            images: imagePaths,
+                            movieID: widget.movieID,
+                            title: 'Images',
+                            buttonColor: Color(0xff540126),
+                            backdrop: false,
+                            overview: true,
+                            isMovie: true,
+                          ),
+                          RatingsDisplayWidget(
+                              id: widget.movieID,
+                              isMovie: true,
+                              reviews: reviews, movieID: widget.movieID,),
+                          ListsScreen(
+                            lists: listsIn,
+                            allMovies: listsIn,
+                            title: 'Featured Lists',
+                            buttonColor: Color(0xff540126),
+                            listID: widget.movieID,
+                          ),
                         ],
                       ),
                     ],
@@ -480,14 +566,14 @@ class _DescriptionState extends State<DescriptionMovies> {
             ),
           ),
           Positioned(
-            bottom:20,
+            bottom: 20,
             right: 30,
             child: FoldableOptions(
               id: id,
               isMovie: true,
               isRated: isRated,
-              initRating: initialRating, watchlistState: watchlistState,
-
+              initRating: initialRating,
+              watchlistState: watchlistState,
             ),
           ),
         ],
@@ -505,10 +591,11 @@ class FoldableOptions extends StatefulWidget {
 
   FoldableOptions(
       {super.key,
-        required this.id,
-        required this.isMovie,
-        required this.isRated,
-        required this.initRating, required this.watchlistState});
+      required this.id,
+      required this.isMovie,
+      required this.isRated,
+      required this.initRating,
+      required this.watchlistState});
 
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
@@ -534,7 +621,6 @@ class _FoldableOptionsState extends State<FoldableOptions>
   late Animation<double> verticalPadding;
   late AnimationController controller;
   final duration = const Duration(milliseconds: 190);
-
 
   int? moviesListId;
   int? accountId;
@@ -592,7 +678,6 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
   @override
   void initState() {
-    print(widget.watchlistState.toString());
     super.initState();
     setIDs();
     controller = AnimationController(vsync: this, duration: duration);
@@ -605,7 +690,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
         Tween<Alignment>(begin: Alignment.centerRight, end: Alignment.topLeft)
             .animate(anim);
     thirdAnim = Tween<Alignment>(
-        begin: Alignment.centerRight, end: Alignment.centerLeft)
+            begin: Alignment.centerRight, end: Alignment.centerLeft)
         .animate(anim);
 
     verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
@@ -621,7 +706,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
 
     while (hasMoreListPages) {
       Map<dynamic, dynamic> listResults =
-      await tmdbWithCustLogs.v3.account.getCreatedLists(
+          await tmdbWithCustLogs.v3.account.getCreatedLists(
         sessionId!,
         accountId!,
         page: listPage,
@@ -639,16 +724,11 @@ class _FoldableOptionsState extends State<FoldableOptions>
       for (final movies in lists) {
         if (movies['name'] == 'CouchCinema Recommended Movies') {
           moviesListId = movies['id'];
-          print(moviesListId.toString());
           break; // Exit the loop once the matching series is found
         }
       }
     }
-
-
-
   }
-
 
   void toggleWatchlist() {
     setState(() {
@@ -696,7 +776,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                   padding: EdgeInsets.only(left: 37),
                   child: getItem(
                     options.elementAt(0),
-                        () {
+                    () {
                       HapticFeedback.lightImpact();
                       tmdbWithCustLogs.v3.lists.addItem(
                           sessionId, moviesListId.toString(), widget.id);
@@ -708,7 +788,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                 alignment: secondAnim.value,
                 child: Container(
                   padding:
-                  EdgeInsets.only(left: 37, top: verticalPadding.value),
+                      EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
                       widget.watchlistState
                           ? Icons.bookmark
@@ -722,12 +802,12 @@ class _FoldableOptionsState extends State<FoldableOptions>
                 alignment: thirdAnim.value,
                 child: Container(
                   padding:
-                  EdgeInsets.only(left: 37, top: verticalPadding.value),
+                      EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
                     widget.isRated
                         ? CupertinoIcons.star_fill
                         : CupertinoIcons.star,
-                        () {
+                    () {
                       //Handle third button tap
                       HapticFeedback.lightImpact();
                       MovieDialogHelper.showMovieRatingDialog(
@@ -748,7 +828,7 @@ class _FoldableOptionsState extends State<FoldableOptions>
                     controller.isCompleted || controller.isAnimating
                         ? Icons.close
                         : Icons.add,
-                        () {
+                    () {
                       // Handle primary button tap
                       HapticFeedback.lightImpact();
                     },
@@ -772,7 +852,7 @@ class MovieDialogHelper {
         return AlertDialog(
           shadowColor: Color(0xff690257),
           shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Rate This Movie',
             style: TextStyle(color: Colors.white, fontSize: 22),
@@ -804,7 +884,6 @@ class MovieDialogHelper {
                         ),
                         onRatingUpdate: (updatedRating) {
                           updRating = updatedRating;
-                          print(updatedRating);
                         },
                       ))
                 ],

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class GenreList extends StatelessWidget {
   final List<String> genres;
+  final Color color;
 
-  GenreList({required this.genres});
+  GenreList({required this.genres, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +14,7 @@ class GenreList extends StatelessWidget {
       children: genres.map((genre) {
         return Container(
           decoration: BoxDecoration(
-            color: Color(0xff540126),
+            color: color,
             borderRadius: BorderRadius.circular(8.0),
           ),
           padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:couch_cinema/api/tmdb_api.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
+import 'package:couch_cinema/widgets/genreWidget.dart';
 import 'package:couch_cinema/widgets/images.dart';
 import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
+import 'package:couch_cinema/widgets/reviews.dart';
 import 'package:couch_cinema/widgets/series.dart';
 import 'package:couch_cinema/widgets/watchProviders.dart';
 import 'package:flutter/cupertino.dart';
@@ -53,6 +55,9 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   List recommendedSeries = [];
   List similarSeries = [];
   List images = [];
+  List<String> genres = [];
+  List<String> keywords = [];
+  List reviews = [];
 
   bool watchlistState = false;
 
@@ -66,6 +71,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     getRecommendedSeries();
     getSimilarMovies();
     getImages();
+    getKeywords();
+    getReviews();
   }
 
   Future<void> getRecommendedSeries() async {
@@ -101,6 +108,23 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
       recommendedSeries = allRecommendedSeries;
     });
   }
+
+  Future<void> getReviews() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults = await tmdbWithCustLogs.v3.tv.getReviews(
+      widget.seriesID,
+    );
+    setState(() {
+      reviews = watchlistResults['results'];
+    });
+  }
+
 
   Future<void> getSimilarMovies() async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
@@ -169,6 +193,25 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     }
   }
 
+  Future<void> getKeywords() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults = await tmdbWithCustLogs.v3.tv.getKeywords(
+      widget.seriesID,
+    );
+
+    setState(() {
+      keywords = List<String>.from(watchlistResults['results']
+          .map((genre) => genre['name'].toString())
+          .toList());
+    });
+  }
+
   Future<void> fetchData() async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
     final readAccToken =
@@ -200,6 +243,9 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
         type = movieData['type'] ?? '';
         status = movieData['status'] ?? '';
         tagline = movieData['tagline'] ?? '';
+        genres = List<String>.from(movieData['genres']
+            .map((genre) => genre['name'].toString())
+            .toList());
       });
     } else {
       throw Exception('Failed to fetch data');
@@ -394,7 +440,22 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(height: 20),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            FittedBox(
+                              child: GenreList(genres: genres, color: Color(0xff540126),),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            GenreList(
+                              genres: keywords,
+                              color: Color(0xff690257),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
                             Text(
                               'Description:',
                               style: TextStyle(
@@ -417,7 +478,10 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                             SeriesScreen(series: recommendedSeries, allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series', typeOfApiCall: 1,),
                             SeriesScreen(series: similarSeries, allSeries: similarSeries, title: 'Similar Series', buttonColor: Color(0xff540126), typeOfApiCall: 0),
                             ImageScreen(images: images.length < 10 ? images: images.sublist(0, 20), movieID: widget.seriesID, title: 'Images', buttonColor: Color(0xff540126), backdrop: false, overview: true, isMovie: false,),
-
+                            RatingsDisplayWidget(
+                              id: widget.seriesID,
+                              isMovie: true,
+                              reviews: reviews, movieID: widget.seriesID,),
                           ],
                         ),
                       ),
@@ -640,7 +704,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
       for (final list in lists) {
         if (list['name'] == 'CouchCinema Recommended Series') {
           seriesListId = list['id'];
-          print(seriesListId.toString());
           break; // Exit the loop once the matching series list is found
         }
       }
@@ -718,7 +781,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                         ),
                         onRatingUpdate: (updatedRating) {
                           rating = updatedRating;
-                          print(updatedRating);
                         },
                       )
                   )
@@ -791,7 +853,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                           List<ListItem> items = [
                             ListItem(mediaType: MediaType.tv, mediaId: widget.id),
                           ];
-                      print('sID: '+ widget.id.toString());
                       tmdbWithCustLogs.v4.lists.addItems(TMDBApiService.getReadAccToken(), seriesListId!, items);
                       HapticFeedback.lightImpact();
                         },
