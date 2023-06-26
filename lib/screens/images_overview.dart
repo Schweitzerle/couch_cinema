@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:couch_cinema/widgets/images.dart';
+import 'package:couch_cinema/widgets/images_screen.dart';
 import 'package:couch_cinema/widgets/movies.dart';
 import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/series.dart';
@@ -74,12 +74,12 @@ class _ImagesOverviewState extends State<ImagesOverview> {
       ),
 
       backgroundColor: Colors.black,
-      body: Padding(padding: EdgeInsets.only(bottom: 50), child: ListView(children: [
-        ImageScreen(images: logos, title: 'Backdrop Images', buttonColor: Color(0xff540126), movieID: widget.movieID, backdrop: true, overview: false, imageType: 0, isMovie: widget.isMovie,),
+      body: Padding(padding: EdgeInsets.only(bottom: 0), child: ListView(children: [
+        ImageScreen(images: logos.length < 10 ? logos : logos.sublist(0, 10), title: 'Backdrop Images', buttonColor: Color(0xff540126), movieID: widget.movieID, backdrop: true, overview: false, imageType: 0, isMovie: widget.isMovie,),
 
-        ImageScreen(images: backdrops, title: 'Logo Images', buttonColor: Color(0xff540126), movieID: widget.movieID, backdrop: true, overview: false, imageType: 1, isMovie: widget.isMovie,),
+        ImageScreen(images: backdrops.length < 10 ? backdrops : backdrops.sublist(0, 10), title: 'Logo Images', buttonColor: Color(0xff540126), movieID: widget.movieID, backdrop: true, overview: false, imageType: 1, isMovie: widget.isMovie,),
 
-        ImageScreen(images: posters, title: 'Poster Images', buttonColor: Color(0xff540126), movieID: widget.movieID, backdrop: false, overview: false, imageType: 2, isMovie: widget.isMovie,),
+        ImageScreen(images: posters.length < 10 ? posters : posters.sublist(0, 10), title: 'Poster Images', buttonColor: Color(0xff540126), movieID: widget.movieID, backdrop: false, overview: false, imageType: 2, isMovie: widget.isMovie,),
 
 
       ]),

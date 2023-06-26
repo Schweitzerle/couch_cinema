@@ -21,7 +21,6 @@ class RatingsDisplayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('www' + id.toString());
     return Container(
       padding: const EdgeInsets.all(10),
       child: Column(
@@ -37,7 +36,7 @@ class RatingsDisplayWidget extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                       builder: (context) =>
-                      AllReviewsScreen(movieID: id, isMovie: isMovie,)
+                      AllReviewsScreen(movieID: id, isMovie: isMovie, appBarColor: Color(0xff540126),)
                   ),
                   );
                 },

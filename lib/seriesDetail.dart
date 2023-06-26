@@ -4,11 +4,12 @@ import 'package:couch_cinema/api/tmdb_api.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
 import 'package:couch_cinema/utils/SessionManager.dart';
 import 'package:couch_cinema/widgets/genreWidget.dart';
-import 'package:couch_cinema/widgets/images.dart';
+import 'package:couch_cinema/widgets/images_screen.dart';
 import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:couch_cinema/widgets/reviews.dart';
 import 'package:couch_cinema/widgets/series.dart';
+import 'package:couch_cinema/widgets/video_widget.dart';
 import 'package:couch_cinema/widgets/watchProviders.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -58,6 +59,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   List<String> genres = [];
   List<String> keywords = [];
   List reviews = [];
+  List videoItems = [];
 
   bool watchlistState = false;
 
@@ -73,6 +75,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     getImages();
     getKeywords();
     getReviews();
+    getVideoItems();
   }
 
   Future<void> getRecommendedSeries() async {
@@ -209,6 +212,22 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
       keywords = List<String>.from(watchlistResults['results']
           .map((genre) => genre['name'].toString())
           .toList());
+    });
+  }
+
+  Future<void> getVideoItems() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults = await tmdbWithCustLogs.v3.tv.getVideos(
+      widget.seriesID.toString(),
+    );
+    setState(() {
+      videoItems = watchlistResults['results'];
     });
   }
 
@@ -477,11 +496,12 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                             PeopleScreen(people: creditData.length <10 ? creditData: creditData.sublist(0, 10), allPeople: creditData, title: 'Cast and Crew', buttonColor: Color(0xff540126)),
                             SeriesScreen(series: recommendedSeries, allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series', typeOfApiCall: 1,),
                             SeriesScreen(series: similarSeries, allSeries: similarSeries, title: 'Similar Series', buttonColor: Color(0xff540126), typeOfApiCall: 0),
-                            ImageScreen(images: images.length < 10 ? images: images.sublist(0, 20), movieID: widget.seriesID, title: 'Images', buttonColor: Color(0xff540126), backdrop: false, overview: true, isMovie: false,),
                             RatingsDisplayWidget(
                               id: widget.seriesID,
-                              isMovie: true,
+                              isMovie: false,
                               reviews: reviews, movieID: widget.seriesID,),
+                            VideoWidget(videoItems: videoItems, title: 'Videos', buttonColor: Color(0xff540126)),
+                            ImageScreen(images: images.length < 10 ? images: images.sublist(0, 10), movieID: widget.seriesID, title: 'Images', buttonColor: Color(0xff540126), backdrop: false, overview: true, isMovie: false,),
                           ],
                         ),
                       ),

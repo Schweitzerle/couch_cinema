@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:couch_cinema/api/tmdb_api.dart';
-import 'package:couch_cinema/widgets/images.dart';
+import 'package:couch_cinema/widgets/images_screen.dart';
 import 'package:couch_cinema/widgets/lists.dart';
 import 'package:couch_cinema/widgets/movies.dart';
 import 'package:couch_cinema/screens/watchlist_and_rated.dart';
@@ -10,6 +10,7 @@ import 'package:couch_cinema/widgets/genreWidget.dart';
 import 'package:couch_cinema/widgets/people.dart';
 import 'package:couch_cinema/widgets/popular_series.dart';
 import 'package:couch_cinema/widgets/reviews.dart';
+import 'package:couch_cinema/widgets/video_widget.dart';
 import 'package:couch_cinema/widgets/watchProviders.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -58,6 +59,7 @@ class _DescriptionState extends State<DescriptionMovies> {
   List imagePaths = [];
   List reviews = [];
   List<String> keywords = [];
+  List videoItems = [];
 
   bool watchlistState = false;
 
@@ -74,6 +76,7 @@ class _DescriptionState extends State<DescriptionMovies> {
     getImages();
     getReviews();
     getKeywords();
+    getVideoItems();
   }
 
   Future<void> getUserRating() async {
@@ -216,6 +219,22 @@ class _DescriptionState extends State<DescriptionMovies> {
     );
     setState(() {
       similarMovies = watchlistResults['results'];
+    });
+  }
+
+  Future<void> getVideoItems() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+
+    Map watchlistResults = await tmdbWithCustLogs.v3.movies.getVideos(
+      widget.movieID,
+    );
+    setState(() {
+      videoItems = watchlistResults['results'];
     });
   }
 
@@ -537,8 +556,13 @@ class _DescriptionState extends State<DescriptionMovies> {
                             movieID: widget.movieID,
                             typeOfApiCall: 0,
                           ),
+                          RatingsDisplayWidget(
+                              id: widget.movieID,
+                              isMovie: true,
+                              reviews: reviews, movieID: widget.movieID,),
+                          VideoWidget(videoItems: videoItems, title: 'Videos', buttonColor: Color(0xff540126)),
                           ImageScreen(
-                            images: imagePaths,
+                            images: imagePaths.length < 10 ? imagePaths : imagePaths.sublist(0, 10),
                             movieID: widget.movieID,
                             title: 'Images',
                             buttonColor: Color(0xff540126),
@@ -546,10 +570,6 @@ class _DescriptionState extends State<DescriptionMovies> {
                             overview: true,
                             isMovie: true,
                           ),
-                          RatingsDisplayWidget(
-                              id: widget.movieID,
-                              isMovie: true,
-                              reviews: reviews, movieID: widget.movieID,),
                           ListsScreen(
                             lists: listsIn,
                             allMovies: listsIn,
