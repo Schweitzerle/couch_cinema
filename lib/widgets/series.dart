@@ -32,7 +32,12 @@ class SeriesScreen extends StatefulWidget {
     required this.series,
     required this.allSeries,
     required this.title,
-    required this.buttonColor, this.serieID, required this.typeOfApiCall, this.accountID, this.sessionID, this.peopleID,
+    required this.buttonColor,
+    this.serieID,
+    required this.typeOfApiCall,
+    this.accountID,
+    this.sessionID,
+    this.peopleID,
   }) : super(key: key);
 
   @override
@@ -40,39 +45,40 @@ class SeriesScreen extends StatefulWidget {
 }
 
 class _SeriesScreenState extends State<SeriesScreen> {
-
-
   Future<UserAccountState> getUserRating(int seriesId) async {
-  final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-  final readAccToken =
-  'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
-  String? sessionId = await SessionManager.getSessionId();
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    String? sessionId = await SessionManager.getSessionId();
 
-  TMDB tmdbWithCustLogs = TMDB(
-  ApiKeys(apiKey, readAccToken),
-  logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-  );
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
 
-  Map<dynamic, dynamic> ratedSeriesResult =
-  await tmdbWithCustLogs.v3.tv.getAccountStatus(seriesId, sessionId: sessionId);
+    Map<dynamic, dynamic> ratedSeriesResult = await tmdbWithCustLogs.v3.tv
+        .getAccountStatus(seriesId, sessionId: sessionId);
 
-  // Extract the data from the ratedSeriesResult
-  int seriesID = ratedSeriesResult['id'];
-  bool favorite = ratedSeriesResult['favorite'];
-  double ratedValue = 0.0; // Default value is 0.0
+    // Extract the data from the ratedSeriesResult
+    int seriesID = ratedSeriesResult['id'];
+    bool favorite = ratedSeriesResult['favorite'];
+    double ratedValue = 0.0; // Default value is 0.0
 
-  if (ratedSeriesResult['rated'] is Map<String, dynamic>) {
-  Map<String, dynamic> ratedData = ratedSeriesResult['rated'];
-  ratedValue = ratedData['value']?.toDouble() ?? 0.0;
+    if (ratedSeriesResult['rated'] is Map<String, dynamic>) {
+      Map<String, dynamic> ratedData = ratedSeriesResult['rated'];
+      ratedValue = ratedData['value']?.toDouble() ?? 0.0;
+    }
+
+    bool watchlist = ratedSeriesResult['watchlist'];
+
+    UserAccountState userRatingData = UserAccountState(
+        id: seriesID,
+        favorite: favorite,
+        watchlist: watchlist,
+        ratedValue: ratedValue);
+
+    return userRatingData;
   }
-
-  bool watchlist = ratedSeriesResult['watchlist'];
-
-  UserAccountState userRatingData = UserAccountState(id: seriesID, favorite: favorite, watchlist: watchlist, ratedValue: ratedValue);
-
-  return userRatingData;
-  }
-
 
   @override
   void initState() {
@@ -99,7 +105,12 @@ class _SeriesScreenState extends State<SeriesScreen> {
                       builder: (context) => AllSeriesScreen(
                         series: widget.allSeries,
                         title: widget.title,
-                        appBarColor: widget.buttonColor, seriesID: widget.serieID, typeOfApiCall: widget.typeOfApiCall, sessionID: widget.sessionID, accountID: widget.accountID, peopleID: widget.peopleID,
+                        appBarColor: widget.buttonColor,
+                        seriesID: widget.serieID,
+                        typeOfApiCall: widget.typeOfApiCall,
+                        sessionID: widget.sessionID,
+                        accountID: widget.accountID,
+                        peopleID: widget.peopleID,
                       ),
                     ),
                   );
@@ -122,8 +133,8 @@ class _SeriesScreenState extends State<SeriesScreen> {
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
                 Map<String, dynamic> series = widget.series[index];
-                double voteAverage = double.parse(series['vote_average'].toString());
-
+                double voteAverage =
+                    double.parse(series['vote_average'].toString());
 
                 return FutureBuilder<UserAccountState>(
                   future: getUserRating(series['id']),
@@ -176,32 +187,38 @@ class _SeriesScreenState extends State<SeriesScreen> {
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         color: PopularSeries.getCircleColor(
-                                          PopularSeries.parseDouble(voteAverage),
+                                          PopularSeries.parseDouble(
+                                              voteAverage),
                                         ),
                                       ),
                                       child: Center(
                                         child: Column(
                                           mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                              MainAxisAlignment.center,
                                           children: [
                                             Text(
-                                              voteAverage.toDouble().toStringAsFixed(1),
+                                              voteAverage
+                                                  .toDouble()
+                                                  .toStringAsFixed(1),
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            userRating?.ratedValue != 0.0 ?
-                                            SizedBox(height: 2):SizedBox(height: 0),
-                                            userRating != 0.0 ?
-                                            Text(
-                                              userRating!.ratedValue.toStringAsFixed(1),
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                              ),
-                                            ):Container(),
+                                            userRating!.ratedValue != 0.0
+                                                ? SizedBox(height: 2)
+                                                : SizedBox(height: 0),
+                                            userRating!.ratedValue != 0.0
+                                                ? Text(
+                                                    userRating!.ratedValue
+                                                        .toStringAsFixed(1),
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 14,
+                                                    ),
+                                                  )
+                                                : Container(),
                                           ],
                                         ),
                                       ),
@@ -230,14 +247,16 @@ class _SeriesScreenState extends State<SeriesScreen> {
     );
   }
 
-  void showRatingDialog(BuildContext context, UserAccountState userAccountState) {
+  void showRatingDialog(
+      BuildContext context, UserAccountState userAccountState) {
     double rating = 0;
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           shadowColor: Color(0xff690257),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Rate This Movie',
             style: TextStyle(color: Colors.white, fontSize: 22),
@@ -270,8 +289,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
                         onRatingUpdate: (updatedRating) {
                           rating = updatedRating;
                         },
-                      )
-                  )
+                      ))
                 ],
               ),
             ],
@@ -386,7 +404,6 @@ class _SeriesScreenState extends State<SeriesScreen> {
 
     Navigator.of(context).pop();
   }
-
 
   Widget _buildShimmerPlaceholder() {
     return Shimmer.fromColors(

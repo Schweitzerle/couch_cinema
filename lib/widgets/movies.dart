@@ -163,10 +163,10 @@ class _MoviesScreenState extends State<MoviesScreen> {
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
-                                              userRating != 0.0
+                                              userRating!.ratedValue != 0.0
                                                   ? SizedBox(height: 2)
                                                   : SizedBox(height: 0),
-                                              userRating != 0.0
+                                              userRating!.ratedValue != 0.0
                                                   ? Text(
                                                       userRating!.ratedValue
                                                           .toStringAsFixed(1),

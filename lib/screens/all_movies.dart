@@ -313,9 +313,9 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
                                                             FontWeight.bold,
                                                       ),
                                                     ),
-                                                    if (userRating != 0.0)
+                                                    if (userRating!.ratedValue != 0.0)
                                                       SizedBox(height: 2),
-                                                    if (userRating != 0.0)
+                                                    if (userRating!.ratedValue != 0.0)
                                                       Text(
                                                         userRating!.ratedValue
                                                             .toStringAsFixed(1),
