@@ -15,6 +15,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:ionicons/ionicons.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 import 'package:http/http.dart' as http;
 
@@ -62,6 +64,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   List videoItems = [];
 
   bool watchlistState = false;
+  bool reccState = false;
 
   @override
   void initState() {
@@ -80,10 +83,10 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
 
   Future<void> getRecommendedSeries() async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
     String? sessionId = await SessionManager.getSessionId();
     int? accountId = await SessionManager.getAccountId();
-
 
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
@@ -93,7 +96,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     bool hasMoreRecomMoviePages = true;
 
     while (hasMoreRecomMoviePages) {
-      Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.tv.getRecommendations(
+      Map<dynamic, dynamic> watchlistResults =
+          await tmdbWithCustLogs.v3.tv.getRecommendations(
         widget.seriesID,
         page: recomMoviesPage,
       );
@@ -101,7 +105,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
 
       allRecommendedSeries.addAll(watchlistSeries);
 
-      if (recomMoviesPage == watchlistResults['total_pages'] || watchlistSeries.isEmpty) {
+      if (recomMoviesPage == watchlistResults['total_pages'] ||
+          watchlistSeries.isEmpty) {
         hasMoreRecomMoviePages = false;
       } else {
         recomMoviesPage++;
@@ -128,7 +133,6 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     });
   }
 
-
   Future<void> getSimilarMovies() async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
     final readAccToken =
@@ -137,8 +141,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    Map watchlistResults =
-    await tmdbWithCustLogs.v3.tv.getSimilar(
+    Map watchlistResults = await tmdbWithCustLogs.v3.tv.getSimilar(
       widget.seriesID,
     );
     setState(() {
@@ -155,7 +158,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.tv.getAccountStatus(widget.seriesID, sessionId: sessionId);
+    Map<dynamic, dynamic> ratedMovieResult = await tmdbWithCustLogs.v3.tv
+        .getAccountStatus(widget.seriesID, sessionId: sessionId);
 
 // Extract the data from the ratedMovieResult
     int? seriesId = ratedMovieResult['id'];
@@ -169,14 +173,15 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
 
     bool watchlist = ratedMovieResult['watchlist'];
 
-
     setState(() {
       initialRating = ratedValue;
       isRated = ratedValue == 0.0 ? false : true;
       watchlistState = watchlist;
+      reccState = favorite;
     });
+  }
 
-  }Future<void> getImages() async {
+  Future<void> getImages() async {
     final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
     final readAccToken =
         'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
@@ -250,9 +255,11 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
       final data = json.decode(response.body);
       setState(() {
         movieData = data;
-        voteAverage = PopularSeries.parseDouble(movieData['vote_average']) ?? 0.0;
+        voteAverage =
+            PopularSeries.parseDouble(movieData['vote_average']) ?? 0.0;
         title = movieData['original_name'] ?? '';
-        bannerUrl = 'https://image.tmdb.org/t/p/w500' + (movieData['backdrop_path'] ?? '');
+        bannerUrl = 'https://image.tmdb.org/t/p/w500' +
+            (movieData['backdrop_path'] ?? '');
         launchOn = movieData['first_air_date'] ?? '';
         description = movieData['overview'] ?? '';
         id = movieData['id'] ?? 0;
@@ -274,13 +281,17 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
       creditData = credits['cast'];
     });
 
-    Map<dynamic, dynamic> watchProviderData = await tmdbWithCustLogs.v3.tv.getWatchProviders(ID.toString());
+    Map<dynamic, dynamic> watchProviderData =
+        await tmdbWithCustLogs.v3.tv.getWatchProviders(ID.toString());
 
     watchProviderData['results'].forEach((country, data) {
       String link = data['link'];
-      List<Map<String, dynamic>> flatrate = data['flatrate'] != null ? List.from(data['flatrate']) : [];
-      List<Map<String, dynamic>> rent = data['rent'] != null ? List.from(data['rent']) : [];
-      List<Map<String, dynamic>> buy = data['buy'] != null ? List.from(data['buy']) : [];
+      List<Map<String, dynamic>> flatrate =
+          data['flatrate'] != null ? List.from(data['flatrate']) : [];
+      List<Map<String, dynamic>> rent =
+          data['rent'] != null ? List.from(data['rent']) : [];
+      List<Map<String, dynamic>> buy =
+          data['buy'] != null ? List.from(data['buy']) : [];
 
       WatchProvider watchProvider = WatchProvider(
         country: country,
@@ -296,8 +307,6 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
 
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -312,7 +321,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
               child: Stack(
                 children: [
                   Image.network(
-                    'https://image.tmdb.org/t/p/w500' + (movieData['backdrop_path'] ?? ''),
+                    'https://image.tmdb.org/t/p/w500' +
+                        (movieData['backdrop_path'] ?? ''),
                     fit: BoxFit.cover,
                     color: Color.fromRGBO(0, 0, 0, 0.6),
                     colorBlendMode: BlendMode.darken,
@@ -321,199 +331,246 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
               ),
             ),
           ),
-      Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(top: 100),
-                child: Container(
-                  padding: EdgeInsets.only(left: 10, right: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                       Text(
-                          title ?? 'Not Loaded',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Stack(
-                            children: [
-                              Container(
-                                height: 200,
-                                width: 140,
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(top: 100),
+              child: Container(
+                padding: EdgeInsets.only(left: 10, right: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title ?? 'Not Loaded',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Stack(
+                          children: [
+                            Container(
+                              height: 200,
+                              width: 140,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  'https://image.tmdb.org/t/p/w500' +
+                                      (movieData['poster_path'] ?? ''),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 1,
+                              left: 1,
+                              child: Container(
+                                width: 60,
+                                height: 60,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
+                                  shape: BoxShape.circle,
+                                  color:
+                                      PopularSeries.getCircleColor(voteAverage),
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    'https://image.tmdb.org/t/p/w500' + (movieData['poster_path'] ?? ''),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 1,
-                                left: 1,
-                                child: Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: PopularSeries.getCircleColor(
-                                        voteAverage),
-                                  ),
-                                  child: Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.center,
-                                      children:[
-                                        Text(
-                                          voteAverage.toStringAsFixed(2),
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        voteAverage.toStringAsFixed(2),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        initialRating != 0.0 ?
-                                        SizedBox(height: 2):SizedBox(height:0),
-                                        initialRating != 0.0 ?
-                                        Text(
-                                          initialRating.toStringAsFixed(1),
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                          ),
-                                        ) : Container(),
-                                      ],
-                                    ),
+                                      ),
+                                      initialRating != 0.0
+                                          ? SizedBox(height: 2)
+                                          : SizedBox(height: 0),
+                                      initialRating != 0.0
+                                          ? Text(
+                                              initialRating.toStringAsFixed(1),
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                              ),
+                                            )
+                                          : Container(),
+                                    ],
+                                  ),
                                 ),
                               ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(width: 10),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 10),
+                              Text(
+                                tagline,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Type: $type',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Status: $status',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'In production: ' + inProduction.toString(),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Release: ' + launchOn ?? '',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Seasons: $numberOfSeasons ($numberOfEpisodes Episodes)',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
                               ),
                             ],
                           ),
-                          SizedBox(width: 10),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 10),
-                                Text(
-                                  tagline,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  'Type: $type',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  'Status: $status',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  'In production: ' + inProduction.toString(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  'Release: ' + launchOn ?? '',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  'Seasons: $numberOfSeasons ($numberOfEpisodes Episodes)',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
+                        ),
+                      ],
+                    ),
+                    SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 10,
+                          ),
+                          FittedBox(
+                            child: GenreList(
+                              genres: genres,
+                              color: Color(0xff540126),
                             ),
+                          ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          GenreList(
+                            genres: keywords,
+                            color: Color(0xff690257),
+                          ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text(
+                            'Description:',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            description,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          WatchProvidersScreen(
+                              watchProviders: watchProvidersList),
+                          PeopleScreen(
+                              people: creditData.length < 10
+                                  ? creditData
+                                  : creditData.sublist(0, 10),
+                              allPeople: creditData,
+                              title: 'Cast and Crew',
+                              buttonColor: Color(0xff540126)),
+                          SeriesScreen(
+                            series: recommendedSeries,
+                            allSeries: recommendedSeries,
+                            buttonColor: Color(0xff540126),
+                            title: 'Recommended Series',
+                            typeOfApiCall: 1,
+                          ),
+                          SeriesScreen(
+                              series: similarSeries,
+                              allSeries: similarSeries,
+                              title: 'Similar Series',
+                              buttonColor: Color(0xff540126),
+                              typeOfApiCall: 0),
+                          RatingsDisplayWidget(
+                            id: widget.seriesID,
+                            isMovie: false,
+                            reviews: reviews,
+                            movieID: widget.seriesID,
+                          ),
+                          VideoWidget(
+                              videoItems: videoItems,
+                              title: 'Videos',
+                              buttonColor: Color(0xff540126)),
+                          ImageScreen(
+                            images: images.length < 10
+                                ? images
+                                : images.sublist(0, 10),
+                            movieID: widget.seriesID,
+                            title: 'Images',
+                            buttonColor: Color(0xff540126),
+                            backdrop: false,
+                            overview: true,
+                            isMovie: false,
                           ),
                         ],
                       ),
-                      SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              height: 10,
-                            ),
-                            FittedBox(
-                              child: GenreList(genres: genres, color: Color(0xff540126),),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            GenreList(
-                              genres: keywords,
-                              color: Color(0xff690257),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Text(
-                              'Description:',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              description,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(height: 10,),
-                            WatchProvidersScreen(watchProviders: watchProvidersList),
-                            PeopleScreen(people: creditData.length <10 ? creditData: creditData.sublist(0, 10), allPeople: creditData, title: 'Cast and Crew', buttonColor: Color(0xff540126)),
-                            SeriesScreen(series: recommendedSeries, allSeries: recommendedSeries, buttonColor: Color(0xff540126), title: 'Recommended Series', typeOfApiCall: 1,),
-                            SeriesScreen(series: similarSeries, allSeries: similarSeries, title: 'Similar Series', buttonColor: Color(0xff540126), typeOfApiCall: 0),
-                            RatingsDisplayWidget(
-                              id: widget.seriesID,
-                              isMovie: false,
-                              reviews: reviews, movieID: widget.seriesID,),
-                            VideoWidget(videoItems: videoItems, title: 'Videos', buttonColor: Color(0xff540126)),
-                            ImageScreen(images: images.length < 10 ? images: images.sublist(0, 10), movieID: widget.seriesID, title: 'Images', buttonColor: Color(0xff540126), backdrop: false, overview: true, isMovie: false,),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
           Positioned(
             bottom: 20,
             right: 30,
-            child: FoldableOptions(id: id, isMovie: false, isRated: isRated, initRating: initialRating, watchlistState: watchlistState,),
+            child: FoldableOptions(
+              id: id,
+              isMovie: false,
+              isRated: isRated,
+              initRating: initialRating,
+              watchlistState: watchlistState,
+              reccState: reccState,
+            ),
           ),
         ],
       ),
@@ -521,19 +578,29 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   }
 }
 
-  class FoldableOptions extends StatefulWidget {
+class FoldableOptions extends StatefulWidget {
   final int id;
   final bool isMovie;
   final double initRating;
   final bool isRated;
   bool watchlistState;
+  bool reccState;
 
-  FoldableOptions({super.key, required this.id, required this.isMovie, required this.initRating, required this.isRated, required this.watchlistState});
+  FoldableOptions(
+      {super.key,
+      required this.id,
+      required this.isMovie,
+      required this.initRating,
+      required this.isRated,
+      required this.watchlistState,
+      required this.reccState});
+
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
 }
 
-class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProviderStateMixin {
+class _FoldableOptionsState extends State<FoldableOptions>
+    with SingleTickerProviderStateMixin {
   final List<IconData> options = [
     Icons.list_alt,
     Icons.bookmark_border,
@@ -559,7 +626,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
   TMDB tmdbWithCustLogs = TMDB(
       ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
       logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-
 
   Widget getItem(IconData source, VoidCallback onTap) {
     final size = 45.0;
@@ -609,7 +675,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
   }
 
   void submitRating(BuildContext context, double rating) async {
-
     // Get the movie ID and rating from the state
     int movieId = widget.id;
 
@@ -652,8 +717,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
 
     // Submit the rating
     try {
-      await tmdbWithCustLogs.v3.tv
-          .deleteRating(movieId, sessionId: sessionId);
+      await tmdbWithCustLogs.v3.tv.deleteRating(movieId, sessionId: sessionId);
 
       // Show a success message or perform any other action after successful rating
       ScaffoldMessenger.of(context).showSnackBar(
@@ -673,15 +737,14 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
     Navigator.of(context).pop();
   }
 
-
-
   @override
   void initState() {
     super.initState();
     setIDs();
     controller = AnimationController(vsync: this, duration: duration);
 
-    final anim = CurvedAnimation(parent: controller, curve: Curves.linearToEaseOut);
+    final anim =
+        CurvedAnimation(parent: controller, curve: Curves.linearToEaseOut);
     firstAnim =
         Tween<Alignment>(begin: Alignment.centerRight, end: Alignment.topRight)
             .animate(anim);
@@ -689,11 +752,10 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
         Tween<Alignment>(begin: Alignment.centerRight, end: Alignment.topLeft)
             .animate(anim);
     thirdAnim = Tween<Alignment>(
-        begin: Alignment.centerRight, end: Alignment.centerLeft)
+            begin: Alignment.centerRight, end: Alignment.centerLeft)
         .animate(anim);
 
     verticalPadding = Tween<double>(begin: 0, end: 37).animate(anim);
-
   }
 
   Future<void> setIDs() async {
@@ -706,7 +768,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
 
     while (hasMoreListPages) {
       Map<dynamic, dynamic> listResults =
-      await tmdbWithCustLogs.v3.account.getCreatedLists(
+          await tmdbWithCustLogs.v3.account.getCreatedLists(
         sessionId!,
         accountId!,
         page: listPage,
@@ -727,7 +789,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
           break; // Exit the loop once the matching series list is found
         }
       }
-
     }
   }
 
@@ -742,25 +803,65 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
       // Remove from watchlist logic
       removeFromWatchlist();
     }
-
   }
 
   Future<void> addToWatchlist() async {
     // Implement the logic to add the movie/TV show to the user's watchlist
     int? accountId = await accountID;
     String? sessionId = await sessionID;
-    TMDB tmdbWithCustLogs = TMDB(ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken() ),
+    TMDB tmdbWithCustLogs = TMDB(
+        ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-    tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!, widget.id, widget.isMovie ? MediaType.movie: MediaType.tv);
+    tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!,
+        widget.id, widget.isMovie ? MediaType.movie : MediaType.tv);
   }
 
   Future<void> removeFromWatchlist() async {
     // Implement the logic to remove the movie/TV show from the user's watchlist
     int? accountId = await accountID;
     String? sessionId = await sessionID;
-    TMDB tmdbWithCustLogs = TMDB(ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken() ),
+    TMDB tmdbWithCustLogs = TMDB(
+        ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-    tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!, widget.id, widget.isMovie ? MediaType.movie: MediaType.tv, shouldAdd: false);
+    tmdbWithCustLogs.v3.account.addToWatchList(sessionId!, accountId!,
+        widget.id, widget.isMovie ? MediaType.movie : MediaType.tv,
+        shouldAdd: false);
+  }
+
+  void toggleRecommended() {
+    setState(() {
+      widget.reccState = !widget.reccState;
+    });
+    if (widget.reccState) {
+      // Add to watchlist logic
+      addToRecommendations();
+    } else {
+      // Remove from watchlist logic
+      removeFromRecommendations();
+    }
+  }
+
+  Future<void> addToRecommendations() async {
+    // Implement the logic to add the movie/TV show to the user's watchlist
+    int? accountId = await accountID;
+    String? sessionId = await sessionID;
+    TMDB tmdbWithCustLogs = TMDB(
+        ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+    tmdbWithCustLogs.v3.account.markAsFavorite(sessionId!, accountId!,
+        widget.id, widget.isMovie ? MediaType.movie : MediaType.tv);
+  }
+
+  Future<void> removeFromRecommendations() async {
+    // Implement the logic to remove the movie/TV show from the user's watchlist
+    int? accountId = await accountID;
+    String? sessionId = await sessionID;
+    TMDB tmdbWithCustLogs = TMDB(
+        ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken()),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+    tmdbWithCustLogs.v3.account.markAsFavorite(sessionId!, accountId!,
+        widget.id, widget.isMovie ? MediaType.movie : MediaType.tv,
+        isFavorite: false);
   }
 
   void showRatingDialog(BuildContext context) {
@@ -769,7 +870,8 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
       builder: (BuildContext context) {
         return AlertDialog(
           shadowColor: Color(0xff690257),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Rate This Movie',
             style: TextStyle(color: Colors.white, fontSize: 22),
@@ -802,8 +904,7 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                         onRatingUpdate: (updatedRating) {
                           rating = updatedRating;
                         },
-                      )
-                  )
+                      ))
                 ],
               ),
             ],
@@ -849,8 +950,6 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -866,40 +965,39 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                 alignment: firstAnim.value,
                 child: Container(
                   padding: EdgeInsets.only(left: 37),
-                  child:
-                  getItem(
-                    options.elementAt(0),
-                        () {
-                          List<ListItem> items = [
-                            ListItem(mediaType: MediaType.tv, mediaId: widget.id),
-                          ];
-                      tmdbWithCustLogs.v4.lists.addItems(TMDBApiService.getReadAccToken(), seriesListId!, items);
-                      HapticFeedback.lightImpact();
-                        },
-                  ),
+                  child: getItem(
+                      widget.reccState
+                          ? Icons.recommend
+                          : Icons.recommend_outlined, () {
+                    toggleRecommended();
+                    HapticFeedback.lightImpact;
+                  }),
                 ),
               ),
               Align(
                 alignment: secondAnim.value,
                 child: Container(
-                  padding: EdgeInsets.only(left: 37, top: verticalPadding.value),
+                  padding:
+                      EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
-                      widget.watchlistState ? Icons.bookmark : Icons.bookmark_border,
-                    () {
-                      toggleWatchlist();
-                      HapticFeedback.lightImpact;
-                    }
-                  ),
+                      widget.watchlistState
+                          ? Icons.bookmark
+                          : Icons.bookmark_border, () {
+                    toggleWatchlist();
+                    HapticFeedback.lightImpact;
+                  }),
                 ),
               ),
               Align(
                 alignment: thirdAnim.value,
                 child: Container(
                   padding:
-                  EdgeInsets.only(left: 37, top: verticalPadding.value),
+                      EdgeInsets.only(left: 37, top: verticalPadding.value),
                   child: getItem(
-                    widget.isRated ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                        () {
+                    widget.isRated
+                        ? CupertinoIcons.star_fill
+                        : CupertinoIcons.star,
+                    () {
                       //Handle third button tap
                       showRatingDialog(context);
                       HapticFeedback.lightImpact();
@@ -911,13 +1009,17 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: () {
-                    controller.isCompleted ? controller.reverse() : controller.forward();
+                    controller.isCompleted
+                        ? controller.reverse()
+                        : controller.forward();
                   },
                   child: buildPrimaryItem(
-                    controller.isCompleted || controller.isAnimating ? Icons.close : Icons.add,
-                        () {
+                    controller.isCompleted || controller.isAnimating
+                        ? Icons.close
+                        : Icons.add,
+                    () {
                       // Handle primary button tap
-                          HapticFeedback.lightImpact();
+                      HapticFeedback.lightImpact();
                     },
                   ),
                 ),
@@ -928,5 +1030,4 @@ class _FoldableOptionsState extends State<FoldableOptions> with SingleTickerProv
       ),
     );
   }
-
 }

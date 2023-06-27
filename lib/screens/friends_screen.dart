@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 
 import '../Database/user.dart';
-import '../widgets/friends_rated_movies.dart';
 import '../widgets/popular_series.dart';
 import '../widgets/rated_movies.dart';
 import '../widgets/rated_series.dart';

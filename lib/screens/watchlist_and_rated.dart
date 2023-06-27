@@ -40,74 +40,31 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    // Fetch all watchlist movies from all pages
-    late List<dynamic> allWatchlistSeries = [];
-    int watchlistSeriesPage = 1;
-    bool hasMoreSeriesWatchlistPages = true;
-
-    while (hasMoreSeriesWatchlistPages) {
-      Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
-        sessionId!,
-        accountId!,
-        page: watchlistSeriesPage,
-      );
-      List<dynamic> watchlistSeries = watchlistResults['results'];
-
-      allWatchlistSeries.addAll(watchlistSeries);
-
-      if (watchlistSeriesPage == watchlistResults['total_pages'] || watchlistSeries.isEmpty) {
-        hasMoreSeriesWatchlistPages = false;
-      } else {
-        watchlistSeriesPage++;
-      }
-    }
-
-    // Fetch all watchlist movies from all pages
-
-      Map<dynamic, dynamic> watchlistResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
+      Map<dynamic, dynamic> watchlistSeriesResults = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
         sessionId!,
         accountId!,
       );
 
-
-
-    // Fetch all rated movies from all pages
+      Map<dynamic, dynamic> watchlistMoviesResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
+        sessionId!,
+        accountId!,
+      );
 
       Map<dynamic, dynamic> ratedMoviesResults = await tmdbWithCustLogs.v3.account.getRatedMovies(
         sessionId!,
         accountId!,
       );
 
-
-
-
-    // Fetch all rated TV shows from all pages
-    List<dynamic> allRatedSeries = [];
-    int ratedSeriesPage = 1;
-    bool hasMoreRatedSeriesPages = true;
-
-    while (hasMoreRatedSeriesPages) {
       Map<dynamic, dynamic> ratedSeriesResults = await tmdbWithCustLogs.v3.account.getRatedTvShows(
         sessionId!,
         accountId!,
-        page: ratedSeriesPage,
       );
-      List<dynamic> ratedSeries = ratedSeriesResults['results'];
-
-      allRatedSeries.addAll(ratedSeries);
-
-      if (ratedSeriesPage == ratedSeriesResults['total_pages'] || ratedSeries.isEmpty) {
-        hasMoreRatedSeriesPages = false;
-      } else {
-        ratedSeriesPage++;
-      }
-    }
 
     setState(() {
-      watchlistMovies = watchlistResults['results'].reversed.toList();
-      watchlistSeries = allWatchlistSeries.reversed.toList();
-      ratedMovies = ratedMoviesResults['results'];
-      ratedSeries = allRatedSeries.reversed.toList();
+      watchlistMovies =  watchlistMoviesResults['results'].reversed.toList();
+      watchlistSeries = watchlistSeriesResults['results'].reversed.toList();
+      ratedMovies = ratedMoviesResults['results'].reversed.toList();
+      ratedSeries = ratedSeriesResults['results'].reversed.toList();
     });
   }
 
@@ -144,7 +101,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
                   ListView(
                     children: [
                       RatedMovies(ratedMovies: ratedMovies, allRatedMovies: ratedMovies, buttonColor: Color(0xffd6069b), accountID: accountId, sessionID: sessionId,),
-                      RatedSeries(ratedSeries: ratedSeries.length < 10 ? ratedSeries: ratedSeries.sublist(0, 10), allRatedSeries: ratedSeries, buttonColor: Color(0xffd6069b),),
+                      RatedSeries(ratedSeries: ratedSeries, allRatedSeries: ratedSeries, buttonColor: Color(0xffd6069b), accountID: accountId, sessionID: sessionId,),
                     ],
                   ),
                 ],

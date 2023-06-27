@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:tmdb_api/tmdb_api.dart';
 
 import '../Database/user.dart';
-import '../widgets/friends_rated_movies.dart';
 import '../widgets/popular_series.dart';
 import '../widgets/rated_movies.dart';
 import '../widgets/rated_series.dart';
@@ -55,111 +54,40 @@ class _FriendScreenState extends State<FriendScreen>
     TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
         logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
 
-    // Fetch all watchlist movies from all pages
-    late List<dynamic> allLists = [];
-    int listPage = 1;
-    bool hasMoreListPages = true;
-    int seriesListId = 0; // Initialize the seriesId variable outside the loop
-    int movieListId = 0;
 
-    while (hasMoreListPages) {
-      Map<dynamic, dynamic> listResults =
-      await tmdbWithCustLogs.v3.account.getCreatedLists(
-        widget.sessionID,
-        widget.accountID,
-        page: listPage,
-      );
-      List<dynamic> lists = listResults['results'];
 
-      allLists.addAll(lists);
-
-      if (listPage == listResults['total_pages'] || lists.isEmpty) {
-        hasMoreListPages = false;
-      } else {
-        listPage++;
-      }
-
-      for (final series in lists) {
-        if (series['name'] == 'CouchCinema Recommended Series') {
-          seriesListId = series['id'];
-          break; // Exit the loop once the matching series is found
-        }
-      }
-
-      for (final series in lists) {
-        if (series['name'] == 'CouchCinema Recommended Movies') {
-          movieListId = series['id'];
-          break; // Exit the loop once the matching series is found
-        }
-      }
-    }
-
-    List<dynamic> allRecommendedMovies = [];
     Map<dynamic, dynamic> reccMovieResults =
-    await tmdbWithCustLogs.v3.lists.getDetails(movieListId.toString());
-    List<dynamic> reccMovies = reccMovieResults['items'];
-    allRecommendedMovies.addAll(reccMovies);
-
+    await tmdbWithCustLogs.v3.account.getFavoriteMovies(
+      widget.sessionID,
+      widget.accountID,
+    );
     // Fetch all watchlist movies from all pages
     List<dynamic> allRecommendedSeries = [];
     Map<dynamic, dynamic> reccSeriesResults =
-    await tmdbWithCustLogs.v3.lists.getDetails(seriesListId.toString());
-    List<dynamic> reccSeries = reccSeriesResults['items'];
-    allRecommendedMovies.addAll(reccSeries);
+    await tmdbWithCustLogs.v3.account.getFavoriteTvShows(
+      widget.sessionID,
+      widget.accountID,
+    );
 
-    // Fetch all rated movies from all pages
-    List<dynamic> allRatedMovies = [];
-    int ratedMoviesPage = 1;
-    bool hasMoreRatedMoviesPages = true;
 
-    while (hasMoreRatedMoviesPages) {
+
       Map<dynamic, dynamic> ratedMoviesResults =
       await tmdbWithCustLogs.v3.account.getRatedMovies(
         widget.sessionID,
         widget.accountID,
-        page: ratedMoviesPage,
       );
-      List<dynamic> ratedMovies = ratedMoviesResults['results'];
 
-
-      allRatedMovies.addAll(ratedMovies);
-
-      if (ratedMoviesPage == ratedMoviesResults['total_pages'] ||
-          ratedMovies.isEmpty) {
-        hasMoreRatedMoviesPages = false;
-      } else {
-        ratedMoviesPage++;
-      }
-    }
-
-    // Fetch all rated TV shows from all pages
-    List<dynamic> allRatedSeries = [];
-    int ratedSeriesPage = 1;
-    bool hasMoreRatedSeriesPages = true;
-
-    while (hasMoreRatedSeriesPages) {
       Map<dynamic, dynamic> ratedSeriesResults =
       await tmdbWithCustLogs.v3.account.getRatedTvShows(
         widget.sessionID,
         widget.accountID,
-        page: ratedSeriesPage,
       );
-      List<dynamic> ratedSeries = ratedSeriesResults['results'];
 
-      allRatedSeries.addAll(ratedSeries);
-
-      if (ratedSeriesPage == ratedSeriesResults['total_pages'] ||
-          ratedSeries.isEmpty) {
-        hasMoreRatedSeriesPages = false;
-      } else {
-        ratedSeriesPage++;
-      }
-    }
     setState(() {
-      recommendedMovies.addAll(allRecommendedMovies.reversed.toList());
-      recommendedSeries.addAll(allRecommendedSeries.reversed.toList());
-      ratedMovies.addAll(allRatedMovies.reversed.toList());
-      ratedSeries.addAll(allRatedSeries.reversed.toList());
+      recommendedMovies.addAll(reccMovieResults['results'].reversed.toList());
+      recommendedSeries.addAll(reccSeriesResults['results'].reversed.toList());
+      ratedMovies.addAll(ratedMoviesResults['results'].reversed.toList());
+      ratedSeries.addAll(ratedSeriesResults['results'].reversed.toList());
     });
   }
 
@@ -179,12 +107,12 @@ class _FriendScreenState extends State<FriendScreen>
         ),
 
         body: Padding(
-          padding: EdgeInsets.only(bottom: 50), child: ListView(children: [
+          padding: EdgeInsets.only(), child: ListView(children: [
           Positioned(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: 10,),
+                  SizedBox(height: 20,),
                   CircleAvatar(
                     radius: 44,
                     backgroundImage: NetworkImage(widget.user.imagePath),
@@ -202,31 +130,27 @@ class _FriendScreenState extends State<FriendScreen>
           ),
           SizedBox(height: 10,),
           MoviesScreen(
-            movies: recommendedMovies.length < 10
-                ? recommendedMovies
-                : recommendedMovies.sublist(0, 10),
+            movies: recommendedMovies,
             allMovies: recommendedMovies,
             title: 'Recommended Movies',
             buttonColor: Color(0xff690257),
-            typeOfApiCall: 1,
+            typeOfApiCall: 9,
           ),
-          /* SeriesScreen(
-            series: recommendedSeries.length < 10
-                ? recommendedSeries
-                : recommendedSeries.sublist(0, 10),
+           SeriesScreen(
+            series: recommendedSeries,
             allSeries: recommendedSeries, title: 'Recommended Series',
-            buttonColor: Color(0xff690257), typeOfApiCall: 1,
-          ),*/
-          FriendsRatedMovies(
+            buttonColor: Color(0xff690257), typeOfApiCall: 9,
+          ),
+          RatedMovies(
             ratedMovies: ratedMovies.length < 10 ? ratedMovies : ratedMovies
                 .sublist(0, 10),
-            allRatedMovies: ratedMovies, buttonColor: Color(0xff690257),
+            allRatedMovies: ratedMovies, buttonColor: Color(0xff690257), accountID: widget.accountID, sessionID: widget.sessionID,
           ),
           RatedSeries(
             ratedSeries: ratedSeries.length < 10
                 ? ratedSeries
                 : ratedSeries.sublist(0, 10),
-            allRatedSeries: ratedSeries, buttonColor: Color(0xff690257),
+            allRatedSeries: ratedSeries, buttonColor: Color(0xff690257), accountID: widget.accountID, sessionID: widget.sessionID,
           ),
         ]),
         ));

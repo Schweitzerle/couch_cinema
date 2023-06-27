@@ -62,6 +62,7 @@ class _DescriptionState extends State<DescriptionMovies> {
   List videoItems = [];
 
   bool watchlistState = false;
+  bool reccState = false;
 
   @override
   void initState() {
@@ -107,6 +108,7 @@ class _DescriptionState extends State<DescriptionMovies> {
       initialRating = ratedValue;
       isRated = ratedValue == 0.0 ? false : true;
       watchlistState = watchlist;
+      reccState = favorite;
     });
   }
 
@@ -497,16 +499,18 @@ class _DescriptionState extends State<DescriptionMovies> {
                             height: 10,
                           ),
                           FittedBox(
-                            child: GenreList(genres: genres, color: Color(0xff540126),),
+                            child: GenreList(
+                              genres: genres,
+                              color: Color(0xff540126),
+                            ),
                           ),
                           SizedBox(
                             height: 10,
                           ),
-                            GenreList(
-                              genres: keywords,
-                              color: Color(0xff690257),
-                            ),
-
+                          GenreList(
+                            genres: keywords,
+                            color: Color(0xff690257),
+                          ),
                           SizedBox(
                             height: 10,
                           ),
@@ -557,12 +561,19 @@ class _DescriptionState extends State<DescriptionMovies> {
                             typeOfApiCall: 0,
                           ),
                           RatingsDisplayWidget(
-                              id: widget.movieID,
-                              isMovie: true,
-                              reviews: reviews, movieID: widget.movieID,),
-                          VideoWidget(videoItems: videoItems, title: 'Videos', buttonColor: Color(0xff540126)),
+                            id: widget.movieID,
+                            isMovie: true,
+                            reviews: reviews,
+                            movieID: widget.movieID,
+                          ),
+                          VideoWidget(
+                              videoItems: videoItems,
+                              title: 'Videos',
+                              buttonColor: Color(0xff540126)),
                           ImageScreen(
-                            images: imagePaths.length < 10 ? imagePaths : imagePaths.sublist(0, 10),
+                            images: imagePaths.length < 10
+                                ? imagePaths
+                                : imagePaths.sublist(0, 10),
                             movieID: widget.movieID,
                             title: 'Images',
                             buttonColor: Color(0xff540126),
@@ -593,7 +604,7 @@ class _DescriptionState extends State<DescriptionMovies> {
               isMovie: true,
               isRated: isRated,
               initRating: initialRating,
-              watchlistState: watchlistState,
+              watchlistState: watchlistState, reccState: reccState,
             ),
           ),
         ],
@@ -608,6 +619,7 @@ class FoldableOptions extends StatefulWidget {
   final bool isRated;
   final double initRating;
   bool watchlistState;
+  bool reccState;
 
   FoldableOptions(
       {super.key,
@@ -615,7 +627,7 @@ class FoldableOptions extends StatefulWidget {
       required this.isMovie,
       required this.isRated,
       required this.initRating,
-      required this.watchlistState});
+      required this.watchlistState, required this.reccState});
 
   @override
   _FoldableOptionsState createState() => _FoldableOptionsState();
@@ -779,6 +791,39 @@ class _FoldableOptionsState extends State<FoldableOptions>
         shouldAdd: false);
   }
 
+  void toggleRecommended() {
+    setState(() {
+      widget.reccState = !widget.reccState;
+    });
+    if (widget.reccState) {
+      // Add to watchlist logic
+      addToRecommendations();
+    } else {
+      // Remove from watchlist logic
+      removeFromRecommendations();
+    }
+
+  }
+
+  Future<void> addToRecommendations() async {
+    // Implement the logic to add the movie/TV show to the user's watchlist
+    int? accountId = await accountID;
+    String? sessionId = await sessionID;
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken() ),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+    tmdbWithCustLogs.v3.account.markAsFavorite(sessionId!, accountId!, widget.id, widget.isMovie ? MediaType.movie: MediaType.tv);
+  }
+
+  Future<void> removeFromRecommendations() async {
+    // Implement the logic to remove the movie/TV show from the user's watchlist
+    int? accountId = await accountID;
+    String? sessionId = await sessionID;
+    TMDB tmdbWithCustLogs = TMDB(ApiKeys(TMDBApiService.getApiKey(), TMDBApiService.getReadAccToken() ),
+        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+    tmdbWithCustLogs.v3.account.markAsFavorite(sessionId!, accountId!, widget.id, widget.isMovie ? MediaType.movie: MediaType.tv, isFavorite: false);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -795,11 +840,12 @@ class _FoldableOptionsState extends State<FoldableOptions>
                 child: Container(
                   padding: EdgeInsets.only(left: 37),
                   child: getItem(
-                    options.elementAt(0),
+                    widget.reccState
+                        ? Icons.recommend
+                        : Icons.recommend_outlined,
                     () {
-                      HapticFeedback.lightImpact();
-                      tmdbWithCustLogs.v3.lists.addItem(
-                          sessionId, moviesListId.toString(), widget.id);
+                      toggleRecommended();
+                      HapticFeedback.lightImpact;
                     },
                   ),
                 ),
