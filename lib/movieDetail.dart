@@ -36,7 +36,8 @@ class _DescriptionState extends State<DescriptionMovies> {
   Map<String, dynamic> dataColl = {};
   List creditData = [];
   List<WatchProvider> watchProvidersList = [];
-  late Future<String?> sessionID;
+  late Future<String?> sessionID = SessionManager.getSessionId();
+  String sessionId = '';
   late String apiKey;
   double voteAverage = 0;
   String title = '';
@@ -55,10 +56,10 @@ class _DescriptionState extends State<DescriptionMovies> {
   List recommendedMovies = [];
   List listsIn = [];
   List similarMovies = [];
-  List<String> genres = [];
+  List genres = [];
   List imagePaths = [];
   List reviews = [];
-  List<String> keywords = [];
+  List keywords = [];
   List videoItems = [];
 
   bool watchlistState = false;
@@ -67,7 +68,6 @@ class _DescriptionState extends State<DescriptionMovies> {
   @override
   void initState() {
     super.initState();
-    sessionID = SessionManager.getSessionId();
     apiKey = TMDBApiService.getApiKey();
     fetchData();
     getUserRating();
@@ -78,6 +78,10 @@ class _DescriptionState extends State<DescriptionMovies> {
     getReviews();
     getKeywords();
     getVideoItems();
+  }
+
+  Future<void> setIDs () async {
+    sessionId = (await sessionID)!;
   }
 
   Future<void> getUserRating() async {
@@ -142,9 +146,7 @@ class _DescriptionState extends State<DescriptionMovies> {
     );
 
     setState(() {
-      keywords = List<String>.from(watchlistResults['keywords']
-          .map((genre) => genre['name'].toString())
-          .toList());
+      keywords = watchlistResults['keywords'];
     });
   }
 
@@ -274,9 +276,7 @@ class _DescriptionState extends State<DescriptionMovies> {
         status = dataColl['status'];
         tagline = dataColl['tagline'];
         budget = dataColl['budget'];
-        genres = List<String>.from(dataColl['genres']
-            .map((genre) => genre['name'].toString())
-            .toList());
+        genres = dataColl['genres'];
       });
     } else {
       throw Exception('Failed to fetch data');
@@ -314,6 +314,7 @@ class _DescriptionState extends State<DescriptionMovies> {
   @override
   Widget build(BuildContext context) {
     // Extract the vote_average
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -501,7 +502,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                           FittedBox(
                             child: GenreList(
                               genres: genres,
-                              color: Color(0xff540126),
+                              color: Color(0xff540126), isMovieKeyword: false,
                             ),
                           ),
                           SizedBox(
@@ -509,7 +510,7 @@ class _DescriptionState extends State<DescriptionMovies> {
                           ),
                           GenreList(
                             genres: keywords,
-                            color: Color(0xff690257),
+                            color: Color(0xff690257), isMovieKeyword: true, sessionID: sessionId,
                           ),
                           SizedBox(
                             height: 10,

@@ -58,8 +58,8 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
   List recommendedSeries = [];
   List similarSeries = [];
   List images = [];
-  List<String> genres = [];
-  List<String> keywords = [];
+  List genres = [];
+  List keywords = [];
   List reviews = [];
   List videoItems = [];
 
@@ -214,9 +214,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
     );
 
     setState(() {
-      keywords = List<String>.from(watchlistResults['results']
-          .map((genre) => genre['name'].toString())
-          .toList());
+      keywords = watchlistResults['results'];
     });
   }
 
@@ -269,9 +267,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
         type = movieData['type'] ?? '';
         status = movieData['status'] ?? '';
         tagline = movieData['tagline'] ?? '';
-        genres = List<String>.from(movieData['genres']
-            .map((genre) => genre['name'].toString())
-            .toList());
+        genres = movieData['genres'];
       });
     } else {
       throw Exception('Failed to fetch data');
@@ -477,7 +473,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                           FittedBox(
                             child: GenreList(
                               genres: genres,
-                              color: Color(0xff540126),
+                              color: Color(0xff540126), isMovieKeyword: false,
                             ),
                           ),
                           SizedBox(
@@ -485,7 +481,7 @@ class _DescriptionSeriesState extends State<DescriptionSeries> {
                           ),
                           GenreList(
                             genres: keywords,
-                            color: Color(0xff690257),
+                            color: Color(0xff690257), isMovieKeyword: false,
                           ),
                           SizedBox(
                             height: 10,

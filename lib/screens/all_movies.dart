@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +13,9 @@ import '../api/tmdb_api.dart';
 import '../movieDetail.dart';
 import '../utils/SessionManager.dart';
 import '../utils/text.dart';
-import '../widgets/popular_series.dart';
+import '../widgets/popular_series.dart';import 'package:http/http.dart' as http;
+
+
 
 class AllMoviesScreen extends StatefulWidget {
   final List movies;
@@ -22,6 +26,7 @@ class AllMoviesScreen extends StatefulWidget {
   final String? sessionID;
   final int typeOfApiCall;
   final int? peopleID;
+  final int? keywordID;
 
   AllMoviesScreen({
     Key? key,
@@ -32,7 +37,7 @@ class AllMoviesScreen extends StatefulWidget {
     this.accountID,
     this.sessionID,
     this.peopleID,
-    required this.typeOfApiCall,
+    required this.typeOfApiCall, this.keywordID,
   }) : super(key: key);
 
   /*
@@ -111,6 +116,8 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
     final readAccToken =
         'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
 
+    print(widget.sessionID);
+
     TMDB tmdbWithCustLogs = TMDB(
       ApiKeys(apiKey, readAccToken),
       logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
@@ -173,6 +180,18 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
           widget.accountID!,
           page: page,
         );
+        break;
+      case 10:
+        final response = await http.get(Uri.parse(
+            'https://api.themoviedb.org/3/keyword/${widget.keywordID}/movies?api_key=$apiKey&session_id=${widget.sessionID!}'));
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          watchlistResults = data;
+          print('keyw '+ data.toString());
+
+        }
+
         break;
     }
 
