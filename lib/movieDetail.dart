@@ -279,7 +279,7 @@ class _DescriptionState extends State<DescriptionMovies> {
         tagline = dataColl['tagline'];
         budget = dataColl['budget'];
         genres = dataColl['genres'];
-        collections = dataColl['belongs_to_collection'];
+        collections = dataColl['belongs_to_collection'] ?? {};
       });
     } else {
       throw Exception('Failed to fetch data');
@@ -317,7 +317,7 @@ class _DescriptionState extends State<DescriptionMovies> {
   @override
   Widget build(BuildContext context) {
     // Extract the vote_average
-
+    print('collll ' + collections.toString());
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -564,7 +564,8 @@ class _DescriptionState extends State<DescriptionMovies> {
                             movieID: widget.movieID,
                             typeOfApiCall: 0,
                           ),
-                          CollectionScreen(collections: collections, title: 'Collection', buttonColor: Color(0xff540126)),
+                          collections.isNotEmpty ?
+                          CollectionScreen(collections: collections, title: 'Collection', buttonColor: Color(0xff540126)) : Container(),
                           RatingsDisplayWidget(
                             id: widget.movieID,
                             isMovie: true,
