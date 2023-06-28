@@ -32,9 +32,9 @@ class AllRatedMovieScreen extends StatefulWidget {
 
 class _AllRatedMoviesState extends State<AllRatedMovieScreen> {
   int currentPage = 1;
-  int itemsPerPage = 10;
   bool isLoadingMore = false;
   List<dynamic> allMovies = [];
+  Map collectionDetails = {};
 
   final ScrollController _scrollController = ScrollController();
 
@@ -62,9 +62,13 @@ class _AllRatedMoviesState extends State<AllRatedMovieScreen> {
   }
 
   void _loadMovies() async {
-    final List<dynamic> initialMovies = await _fetchMoviesPage(currentPage);
+    final totalPages = await _fetchTotalPages();
+    final lastPage =  totalPages;
+
+    final List<dynamic> initialMovies = await _fetchMoviesPage(lastPage);
     setState(() {
-      allMovies.addAll(initialMovies);
+      allMovies.addAll(initialMovies.reversed);
+      currentPage = lastPage;
     });
   }
 
@@ -74,15 +78,39 @@ class _AllRatedMoviesState extends State<AllRatedMovieScreen> {
         isLoadingMore = true;
       });
 
-      final nextPage = currentPage + 1;
+      final nextPage =  currentPage - 1;
       final List<dynamic> nextMovies = await _fetchMoviesPage(nextPage);
 
       setState(() {
-        allMovies.addAll(nextMovies);
+        allMovies.addAll(nextMovies.reversed);
         currentPage = nextPage;
         isLoadingMore = false;
       });
     }
+  }
+
+
+  Future<int> _fetchTotalPages() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    int totalPages = 1;
+
+
+        final result = await tmdbWithCustLogs.v3.account.getRatedMovies(
+          widget.sessionID!,
+          widget.accountID!,
+        );
+        totalPages = result['total_pages'];
+
+
+    return totalPages;
   }
 
   Future<List<dynamic>> _fetchMoviesPage(int page) async {

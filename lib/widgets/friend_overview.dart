@@ -51,45 +51,175 @@ class _FriendScreenState extends State<FriendScreen>
   }
 
   loadMovies() async {
-    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
-        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
-
-
-
-    Map<dynamic, dynamic> reccMovieResults =
-    await tmdbWithCustLogs.v3.account.getFavoriteMovies(
-      widget.sessionID,
-      widget.accountID,
-    );
-    // Fetch all watchlist movies from all pages
-    List<dynamic> allRecommendedSeries = [];
-    Map<dynamic, dynamic> reccSeriesResults =
-    await tmdbWithCustLogs.v3.account.getFavoriteTvShows(
-      widget.sessionID,
-      widget.accountID,
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
     );
 
+    int reccMovieTotalPages = 1;
+    int reccSeriesTotalPages = 1;
+    int ratedMoviesTotalPages = 1;
+    int ratedSeriesTotalPages = 1;
+
+    // Fetch the total number of pages for each API call
+    Map<dynamic, dynamic> reccMovieInfo = await tmdbWithCustLogs.v3.account.getFavoriteMovies(
+      widget.sessionID,
+      widget.accountID,
+      page: 1,
+    );
+    if (reccMovieInfo.containsKey('total_pages')) {
+      reccMovieTotalPages = reccMovieInfo['total_pages'];
+    }
+
+    Map<dynamic, dynamic> reccSeriesInfo = await tmdbWithCustLogs.v3.account.getFavoriteTvShows(
+      widget.sessionID,
+      widget.accountID,
+      page: 1,
+    );
+    if (reccSeriesInfo.containsKey('total_pages')) {
+      reccSeriesTotalPages = reccSeriesInfo['total_pages'];
+    }
+
+    Map<dynamic, dynamic> ratedMoviesInfo = await tmdbWithCustLogs.v3.account.getRatedMovies(
+      widget.sessionID,
+      widget.accountID,
+      page: 1,
+    );
+    if (ratedMoviesInfo.containsKey('total_pages')) {
+      ratedMoviesTotalPages = ratedMoviesInfo['total_pages'];
+    }
+
+    Map<dynamic, dynamic> ratedSeriesInfo = await tmdbWithCustLogs.v3.account.getRatedTvShows(
+      widget.sessionID,
+      widget.accountID,
+      page: 1,
+    );
+    if (ratedSeriesInfo.containsKey('total_pages')) {
+      ratedSeriesTotalPages = ratedSeriesInfo['total_pages'];
+    }
+
+    // Fetch the last two pages for each API call
+    List<Map<dynamic, dynamic>> reccMoviePages = [];
+    List<Map<dynamic, dynamic>> reccSeriesPages = [];
+    List<Map<dynamic, dynamic>> ratedMoviesPages = [];
+    List<Map<dynamic, dynamic>> ratedSeriesPages = [];
 
 
-      Map<dynamic, dynamic> ratedMoviesResults =
-      await tmdbWithCustLogs.v3.account.getRatedMovies(
-        widget.sessionID,
-        widget.accountID,
-      );
 
-      Map<dynamic, dynamic> ratedSeriesResults =
-      await tmdbWithCustLogs.v3.account.getRatedTvShows(
-        widget.sessionID,
-        widget.accountID,
-      );
+    if (reccMovieTotalPages >= 1) {
+      int lastPage = reccMovieTotalPages;
+      if (lastPage > 0 && lastPage <= 1000) {
+        Map<dynamic, dynamic> reccMovieResultsLast = await tmdbWithCustLogs.v3.account.getFavoriteMovies(
+          widget.sessionID,
+          widget.accountID,
+          page: lastPage,
+        );
+        reccMoviePages.add(reccMovieResultsLast);
+
+      }
+      int secondLastPage = reccMovieTotalPages - 1;
+      if (secondLastPage > 0 && secondLastPage <= 1000) {
+        Map<dynamic, dynamic> reccMovieResultsSecondLast = await tmdbWithCustLogs.v3.account.getFavoriteMovies(
+          widget.sessionID,
+          widget.accountID,
+          page: secondLastPage,
+        );
+        reccMoviePages.add(reccMovieResultsSecondLast);
+      }
+    }
+
+    if (reccSeriesTotalPages >= 1) {
+      int lastPage = reccSeriesTotalPages;
+      if (lastPage > 0 && lastPage <= 1000) {
+        Map<dynamic, dynamic> reccSeriesResultsLast = await tmdbWithCustLogs.v3.account.getFavoriteTvShows(
+          widget.sessionID,
+          widget.accountID,
+          page: lastPage,
+        );
+        reccSeriesPages.add(reccSeriesResultsLast);
+      }
+      int secondLastPage = reccSeriesTotalPages - 1;
+      if (secondLastPage > 0 && secondLastPage <= 1000) {
+        Map<dynamic, dynamic> reccSeriesResultsSecondLast = await tmdbWithCustLogs.v3.account.getFavoriteTvShows(
+          widget.sessionID,
+          widget.accountID,
+          page: secondLastPage,
+        );
+        reccSeriesPages.add(reccSeriesResultsSecondLast);
+      }
+    }
+
+    if (ratedMoviesTotalPages >= 1) {
+      int lastPage = ratedMoviesTotalPages;
+      if (lastPage > 0 && lastPage <= 1000) {
+        Map<dynamic, dynamic> ratedMoviesResultsLast = await tmdbWithCustLogs.v3.account.getRatedMovies(
+          widget.sessionID,
+          widget.accountID,
+          page: lastPage,
+        );
+        ratedMoviesPages.add(ratedMoviesResultsLast);
+      }
+      int secondLastPage = ratedMoviesTotalPages - 1;
+      if (secondLastPage > 0 && secondLastPage <= 1000) {
+        Map<dynamic, dynamic> ratedMoviesResultsSecondLast = await tmdbWithCustLogs.v3.account.getRatedMovies(
+          widget.sessionID,
+          widget.accountID,
+          page: secondLastPage,
+        );
+        ratedMoviesPages.add(ratedMoviesResultsSecondLast);
+      }
+    }
+
+    if (ratedSeriesTotalPages >= 1) {
+      int lastPage = ratedSeriesTotalPages;
+      if (lastPage > 0 && lastPage <= 1000) {
+        Map<dynamic, dynamic> ratedSeriesResultsLast = await tmdbWithCustLogs.v3.account.getRatedTvShows(
+          widget.sessionID,
+          widget.accountID,
+          page: lastPage,
+        );
+        ratedSeriesPages.add(ratedSeriesResultsLast);
+      }
+      int secondLastPage = ratedSeriesTotalPages - 1;
+      if (secondLastPage > 0 && secondLastPage <= 1000) {
+        Map<dynamic, dynamic> ratedSeriesResultsSecondLast = await tmdbWithCustLogs.v3.account.getRatedTvShows(
+          widget.sessionID,
+          widget.accountID,
+          page: secondLastPage,
+        );
+        ratedSeriesPages.add(ratedSeriesResultsSecondLast);
+      }
+    }
+
+    // Combine the results and reverse the items of each page
+    List<dynamic> reversedRecommendedMovies = [];
+    for (var i = 0; i < reccMoviePages.length; i++) {
+      reversedRecommendedMovies.addAll(reccMoviePages[i]['results'].reversed);
+    }
+
+    List<dynamic> reversedRecommendedSeries = [];
+    for (var i = 0; i < reccSeriesPages.length; i++) {
+      reversedRecommendedSeries.addAll(reccSeriesPages[i]['results'].reversed);
+    }
+
+    List<dynamic> reversedRatedMovies = [];
+    for (var i = 0; i < ratedMoviesPages.length; i++) {
+      reversedRatedMovies.addAll(ratedMoviesPages[i]['results'].reversed);
+    }
+
+    List<dynamic> reversedRatedSeries = [];
+    for (var i = 0; i < ratedSeriesPages.length; i++) {
+      reversedRatedSeries.addAll(ratedSeriesPages[i]['results'].reversed);
+    }
 
     setState(() {
-      recommendedMovies.addAll(reccMovieResults['results'].reversed.toList());
-      recommendedSeries.addAll(reccSeriesResults['results'].reversed.toList());
-      ratedMovies.addAll(ratedMoviesResults['results'].reversed.toList());
-      ratedSeries.addAll(ratedSeriesResults['results'].reversed.toList());
+      recommendedMovies = reversedRecommendedMovies;
+      recommendedSeries = reversedRecommendedSeries;
+      ratedMovies = reversedRatedMovies;
+      ratedSeries = reversedRatedSeries;
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -129,29 +259,38 @@ class _FriendScreenState extends State<FriendScreen>
               )
           ),
           SizedBox(height: 10,),
+          recommendedMovies.isNotEmpty ?
           MoviesScreen(
-            movies: recommendedMovies,
+            movies: recommendedMovies.length< 10
+                ? recommendedMovies
+                : recommendedMovies.sublist(0, 10),
             allMovies: recommendedMovies,
             title: 'Recommended Movies',
             buttonColor: Color(0xff690257),
-            typeOfApiCall: 9,
-          ),
+            typeOfApiCall: 9,  accountID: widget.accountID, sessionID: widget.sessionID,
+          ) : Container(),
+           recommendedSeries.isNotEmpty ?
            SeriesScreen(
-            series: recommendedSeries,
+            series: recommendedSeries.length< 10
+                ? recommendedSeries
+                : recommendedSeries.sublist(0, 10),
             allSeries: recommendedSeries, title: 'Recommended Series',
-            buttonColor: Color(0xff690257), typeOfApiCall: 9,
-          ),
+            buttonColor: Color(0xff690257), typeOfApiCall: 9,  accountID: widget.accountID, sessionID: widget.sessionID,
+          ) : Container(),
+          ratedMovies.isNotEmpty ?
           RatedMovies(
-            ratedMovies: ratedMovies.length < 10 ? ratedMovies : ratedMovies
-                .sublist(0, 10),
+            ratedMovies: ratedMovies.length< 10
+                ? ratedMovies
+                : ratedMovies.sublist(0, 10),
             allRatedMovies: ratedMovies, buttonColor: Color(0xff690257), accountID: widget.accountID, sessionID: widget.sessionID,
-          ),
+          ) :Container(),
+          ratedSeries.isNotEmpty ?
           RatedSeries(
             ratedSeries: ratedSeries.length < 10
                 ? ratedSeries
                 : ratedSeries.sublist(0, 10),
             allRatedSeries: ratedSeries, buttonColor: Color(0xff690257), accountID: widget.accountID, sessionID: widget.sessionID,
-          ),
+          ) : Container(),
         ]),
         ));
   }

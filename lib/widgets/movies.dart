@@ -61,7 +61,6 @@ class _MoviesScreenState extends State<MoviesScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => AllMoviesScreen(
-                        movies: widget.allMovies,
                         title: widget.title,
                         appBarColor: widget.buttonColor,
                         movieID: widget.movieID,

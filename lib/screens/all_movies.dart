@@ -13,12 +13,10 @@ import '../api/tmdb_api.dart';
 import '../movieDetail.dart';
 import '../utils/SessionManager.dart';
 import '../utils/text.dart';
-import '../widgets/popular_series.dart';import 'package:http/http.dart' as http;
-
-
+import '../widgets/popular_series.dart';
+import 'package:http/http.dart' as http;
 
 class AllMoviesScreen extends StatefulWidget {
-  final List movies;
   final String title;
   final Color appBarColor;
   final int? movieID;
@@ -27,17 +25,19 @@ class AllMoviesScreen extends StatefulWidget {
   final int typeOfApiCall;
   final int? peopleID;
   final int? keywordID;
+  final int? collectionID;
 
   AllMoviesScreen({
     Key? key,
-    required this.movies,
     required this.title,
     required this.appBarColor,
     this.movieID,
     this.accountID,
     this.sessionID,
     this.peopleID,
-    required this.typeOfApiCall, this.keywordID,
+    required this.typeOfApiCall,
+    this.keywordID,
+    this.collectionID,
   }) : super(key: key);
 
   /*
@@ -57,150 +57,199 @@ class AllMoviesScreen extends StatefulWidget {
 }
 
 class _AllSimilarMoviesState extends State<AllMoviesScreen> {
-  int currentPage = 1;
-  bool isLoadingMore = false;
-  List<dynamic> allMovies = [];
+int currentPage = 1;
+bool isLoadingMore = false;
+List<dynamic> allMovies = [];
+Map collectionDetails = {};
 
-  final ScrollController _scrollController = ScrollController();
+final ScrollController _scrollController = ScrollController();
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_scrollListener);
-    _loadMovies();
-  }
+@override
+void initState() {
+  super.initState();
+  _scrollController.addListener(_scrollListener);
+  _loadMovies();
+}
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
+@override
+void dispose() {
+  _scrollController.dispose();
+  super.dispose();
+}
 
-  void _scrollListener() {
-    if (!isLoadingMore && _scrollController.position.atEdge) {
-      final isBottom = _scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent;
-      if (isBottom) {
-        _loadMoreMovies();
-      }
+void _scrollListener() {
+  if (!isLoadingMore && _scrollController.position.atEdge) {
+    final isBottom = _scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent;
+    if (isBottom) {
+      _loadMoreMovies();
     }
   }
+}
 
-  void _loadMovies() async {
-    final List<dynamic> initialMovies = await _fetchMoviesPage(currentPage);
+void _loadMovies() async {
+  final totalPages = await _fetchTotalPages();
+  final lastPage = _shouldLoadFromLastPage() ? totalPages: 1;
+
+  final List<dynamic> initialMovies = await _fetchMoviesPage(lastPage);
+  setState(() {
+    allMovies.addAll(_shouldLoadFromLastPage() ? initialMovies.reversed : initialMovies);
+    currentPage = lastPage;
+  });
+}
+
+void _loadMoreMovies() async {
+  if (!isLoadingMore) {
     setState(() {
-      allMovies.addAll(initialMovies);
+      isLoadingMore = true;
+    });
+
+    final nextPage = _shouldLoadFromLastPage() ? currentPage - 1 : currentPage + 1;
+    final List<dynamic> nextMovies = await _fetchMoviesPage(nextPage);
+
+    setState(() {
+      allMovies.addAll(_shouldLoadFromLastPage() ? nextMovies.reversed :nextMovies);
+      currentPage = nextPage;
+      isLoadingMore = false;
     });
   }
+}
 
-  void _loadMoreMovies() async {
-    if (!isLoadingMore) {
-      setState(() {
-        isLoadingMore = true;
-      });
+bool _shouldLoadFromLastPage() {
+  return [7, 9].contains(widget.typeOfApiCall);
+}
 
-      final nextPage = currentPage + 1;
-      final List<dynamic> nextMovies = await _fetchMoviesPage(nextPage);
+Future<int> _fetchTotalPages() async {
+  final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+  final readAccToken =
+      'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
 
-      setState(() {
-        allMovies.addAll(nextMovies);
-        currentPage = nextPage;
-        isLoadingMore = false;
-      });
-    }
+  TMDB tmdbWithCustLogs = TMDB(
+    ApiKeys(apiKey, readAccToken),
+    logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+  );
+
+  int totalPages = 1;
+
+  switch (widget.typeOfApiCall) {
+    case 7:
+      final result = await tmdbWithCustLogs.v3.account.getMovieWatchList(
+        widget.sessionID!,
+        widget.accountID!,
+      );
+      totalPages = result['total_pages'];
+      break;
+    case 9:
+      final result = await tmdbWithCustLogs.v3.account.getFavoriteMovies(
+        widget.sessionID!,
+        widget.accountID!,
+      );
+      totalPages = result['total_pages'];
+      break;
   }
 
+  return totalPages;
+}
 
-  Future<List<dynamic>> _fetchMoviesPage(int page) async {
-    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
-    final readAccToken =
-        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+Future<List<dynamic>> _fetchMoviesPage(int page) async {
+  final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+  final readAccToken =
+      'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
 
-    print(widget.sessionID);
+  TMDB tmdbWithCustLogs = TMDB(
+    ApiKeys(apiKey, readAccToken),
+    logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+  );
 
-    TMDB tmdbWithCustLogs = TMDB(
-      ApiKeys(apiKey, readAccToken),
-      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
-    );
+  Map<dynamic, dynamic> watchlistResults = {};
 
-    Map<dynamic, dynamic> watchlistResults = {};
-
-    switch (widget.typeOfApiCall) {
-      case 0:
-        watchlistResults = await tmdbWithCustLogs.v3.movies.getSimilar(
-          widget.movieID!,
-          page: page,
+  switch (widget.typeOfApiCall) {
+    case 0:
+      watchlistResults = await tmdbWithCustLogs.v3.movies.getSimilar(
+        widget.movieID!,
+        page: page,
+      );
+      break;
+    case 1:
+      watchlistResults = await tmdbWithCustLogs.v3.movies.getRecommended(
+        widget.movieID!,
+        page: page,
+      );
+      break;
+    case 2:
+      watchlistResults = await tmdbWithCustLogs.v3.trending
+          .getTrending(mediaType: MediaType.movie, page: page);
+      break;
+    case 3:
+      watchlistResults =
+      await tmdbWithCustLogs.v3.movies.getPopular(page: page);
+      break;
+    case 4:
+      watchlistResults =
+      await tmdbWithCustLogs.v3.movies.getTopRated(page: page);
+      break;
+    case 5:
+      watchlistResults =
+      await tmdbWithCustLogs.v3.movies.getUpcoming(page: page);
+      break;
+    case 6:
+      watchlistResults =
+      await tmdbWithCustLogs.v3.movies.getNowPlaying(page: page);
+      break;
+    case 7:
+      watchlistResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
+        widget.sessionID!,
+        widget.accountID!,
+        page: page,
+      );
+      break;
+    case 8:
+      if (page == 1) {
+        watchlistResults = await tmdbWithCustLogs.v3.people.getMovieCredits(
+          widget.peopleID!,
         );
-        break;
-      case 1:
-        watchlistResults = await tmdbWithCustLogs.v3.movies.getRecommended(
-          widget.movieID!,
-          page: page,
+      } else {
+        return []; // Return an empty list for subsequent pages
+      }
+      break;
+    case 9:
+      watchlistResults = await tmdbWithCustLogs.v3.account.getFavoriteMovies(
+        widget.sessionID!,
+        widget.accountID!,
+        page: page,
+      );
+      break;
+    case 10:
+      final response = await http.get(Uri.parse(
+          'https://api.themoviedb.org/3/keyword/${widget.keywordID}/movies?api_key=$apiKey&session_id=${widget.sessionID!}&page=$page'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        watchlistResults = data;
+      }
+      break;
+    case 11:
+      if (page == 1) {
+        watchlistResults = await tmdbWithCustLogs.v3.collections.getDetails(
+          widget.collectionID!,
         );
-        break;
-      case 2:
-        watchlistResults = await tmdbWithCustLogs.v3.trending
-            .getTrending(mediaType: MediaType.movie, page: page);
-        break;
-      case 3:
-        watchlistResults =
-            await tmdbWithCustLogs.v3.movies.getPopular(page: page);
-        break;
-      case 4:
-        watchlistResults =
-            await tmdbWithCustLogs.v3.movies.getTopRated(page: page);
-        break;
-      case 5:
-        watchlistResults =
-            await tmdbWithCustLogs.v3.movies.getUpcoming(page: page);
-        break;
-      case 6:
-        watchlistResults =
-            await tmdbWithCustLogs.v3.movies.getNowPlaying(page: page);
-        break;
-      case 7:
-        watchlistResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
-          widget.sessionID!,
-          widget.accountID!,
-          page: page,
-        );
-        break;
-      case 8:
-        if (page == 1) {
-          watchlistResults = await tmdbWithCustLogs.v3.people.getMovieCredits(
-            widget.peopleID!,
-          );
-        } else {
-          return []; // Return an empty list for subsequent pages
-        }
-        break;
-      case 9:
-        watchlistResults = await tmdbWithCustLogs.v3.account.getFavoriteMovies(
-          widget.sessionID!,
-          widget.accountID!,
-          page: page,
-        );
-        break;
-      case 10:
-        final response = await http.get(Uri.parse(
-            'https://api.themoviedb.org/3/keyword/${widget.keywordID}/movies?api_key=$apiKey&session_id=${widget.sessionID!}'));
-
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          watchlistResults = data;
-          print('keyw '+ data.toString());
-
-        }
-
-        break;
-    }
-
-    List<dynamic> watchlistSeries = widget.typeOfApiCall == 8
-        ? watchlistResults['cast']
-        : watchlistResults['results'];
-
-    return watchlistSeries;
+        setState(() {
+          collectionDetails = watchlistResults;
+        });
+      } else {
+        return []; // Return an empty list for subsequent pages
+      }
+      break;
   }
+
+  List<dynamic> watchlistSeries = widget.typeOfApiCall == 8
+      ? watchlistResults['cast']
+      : widget.typeOfApiCall == 11
+      ? watchlistResults['parts']
+      : watchlistResults['results'];
+
+  return watchlistSeries;
+}
 
   @override
   Widget build(BuildContext context) {
@@ -216,144 +265,237 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
           ),
         ),
       ),
-      body: Stack(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GridView.builder(
-            controller: _scrollController,
-            itemCount: allMovies.length + 1,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.6,
-            ),
-            itemBuilder: (BuildContext context, int index) {
-              if (index == allMovies.length) {
-                if (isLoadingMore) {
-                  return Container();
-                } else {
-                  return SizedBox();
-                }
-              }
-
-              final movie = allMovies[index];
-              double voteAverage =
-                  double.parse(movie['vote_average'].toString());
-              int movieId = movie['id'];
-
-              return FutureBuilder<UserAccountState>(
-                future: getUserRating(movieId),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildShimmerPlaceholder();
-                  } else if (snapshot.hasError) {
-                    return _buildErrorContainer();
-                  } else {
-                    UserAccountState? userRating = snapshot.data;
-
-                    return AnimationConfiguration.staggeredGrid(
-                      position: index,
-                      duration: const Duration(milliseconds: 375),
-                      columnCount: 2,
-                      child: ScaleAnimation(
-                        child: FadeInAnimation(
-                          child: GestureDetector(
-                            onLongPress: (){
-                              showRatingDialog(context, userRating!);
-                              HapticFeedback.lightImpact();
-                            },
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DescriptionMovies(
-                                    movieID: movieId,
-                                    isMovie: true,
-                                  ),
+          if (collectionDetails.isNotEmpty)
+            Stack(
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 250,
+                    width: double.infinity,
+                    child: Stack(
+                      children: [
+                        Image.network(
+                          'https://image.tmdb.org/t/p/w500${collectionDetails['backdrop_path']}',
+                          fit: BoxFit.cover,
+                          color: Color.fromRGBO(0, 0, 0, 0.6),
+                          colorBlendMode: BlendMode.darken,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.fromLTRB(16, 30, 0, 0),
+                  // Adjust padding as needed
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            collectionDetails['name'],
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          Container(
+                            height: 180,
+                            width: 120,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                'https://image.tmdb.org/t/p/w500${collectionDetails['poster_path']}',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(width: 0),
+                      // Adjust spacing between image and description
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 50),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 6),
+                              Text(
+                                collectionDetails['overview'],
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
                                 ),
-                              );
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Stack(
-                                        children: [
-                                          Image.network(
-                                            'https://image.tmdb.org/t/p/w500${movie['poster_path']}',
-                                            fit: BoxFit.cover,
-                                          ),
-                                          Align(
-                                            alignment: Alignment.bottomLeft,
-                                            child: Container(
-                                              width: 50,
-                                              height: 50,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: PopularSeries
-                                                    .getCircleColor(
-                                                  PopularSeries.parseDouble(
-                                                      voteAverage),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          SizedBox(
+            height: 20,
+          ),
+          Expanded(
+            child: GridView.builder(
+              controller: _scrollController,
+              itemCount: allMovies.length + 1,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.6,
+              ),
+              itemBuilder: (BuildContext context, int index) {
+                if (index == allMovies.length) {
+                  if (isLoadingMore) {
+                    return Container();
+                  } else {
+                    return SizedBox();
+                  }
+                }
+
+                final movie = allMovies[index];
+                double voteAverage =
+                    double.parse(movie['vote_average'].toString());
+                int movieId = movie['id'];
+
+                return FutureBuilder<UserAccountState>(
+                  future: getUserRating(movieId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return _buildShimmerPlaceholder();
+                    } else if (snapshot.hasError) {
+                      return _buildErrorContainer();
+                    } else {
+                      UserAccountState? userRating = snapshot.data;
+
+                      return AnimationConfiguration.staggeredGrid(
+                        position: index,
+                        duration: const Duration(milliseconds: 375),
+                        columnCount: 2,
+                        child: ScaleAnimation(
+                          child: FadeInAnimation(
+                            child: GestureDetector(
+                              onLongPress: () {
+                                showRatingDialog(context, userRating!);
+                                HapticFeedback.lightImpact();
+                              },
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DescriptionMovies(
+                                      movieID: movieId,
+                                      isMovie: true,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.all(10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Stack(
+                                          children: [
+                                            Image.network(
+                                              'https://image.tmdb.org/t/p/w500${movie['poster_path']}',
+                                              fit: BoxFit.cover,
+                                            ),
+                                            Align(
+                                              alignment: Alignment.bottomLeft,
+                                              child: Container(
+                                                width: 50,
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: PopularSeries
+                                                      .getCircleColor(
+                                                    PopularSeries.parseDouble(
+                                                        voteAverage),
+                                                  ),
                                                 ),
-                                              ),
-                                              child: Center(
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Text(
-                                                      voteAverage
-                                                          .toStringAsFixed(1),
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 18,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    if (userRating!.ratedValue != 0.0)
-                                                      SizedBox(height: 2),
-                                                    if (userRating!.ratedValue != 0.0)
+                                                child: Center(
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
                                                       Text(
-                                                        userRating!.ratedValue
+                                                        voteAverage
                                                             .toStringAsFixed(1),
                                                         style: TextStyle(
                                                           color: Colors.white,
-                                                          fontSize: 14,
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
                                                         ),
                                                       ),
-                                                  ],
+                                                      if (userRating!
+                                                              .ratedValue !=
+                                                          0.0)
+                                                        SizedBox(height: 2),
+                                                      if (userRating!
+                                                              .ratedValue !=
+                                                          0.0)
+                                                        Text(
+                                                          userRating!.ratedValue
+                                                              .toStringAsFixed(
+                                                                  1),
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    movie['title'],
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
+                                    SizedBox(height: 8),
+                                    Text(
+                                      movie['title'],
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  }
-                },
-              );
-            },
+                      );
+                    }
+                  },
+                );
+              },
+            ),
           ),
           if (isLoadingMore)
             Align(
@@ -379,8 +521,8 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
       logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
     );
 
-    Map<dynamic, dynamic> ratedSeriesResult =
-    await tmdbWithCustLogs.v3.movies.getAccountStatus(seriesId, sessionId: sessionId);
+    Map<dynamic, dynamic> ratedSeriesResult = await tmdbWithCustLogs.v3.movies
+        .getAccountStatus(seriesId, sessionId: sessionId);
 
     // Extract the data from the ratedSeriesResult
     int seriesID = ratedSeriesResult['id'];
@@ -394,19 +536,25 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
 
     bool watchlist = ratedSeriesResult['watchlist'];
 
-    UserAccountState userRatingData = UserAccountState(id: seriesID, favorite: favorite, watchlist: watchlist, ratedValue: ratedValue);
+    UserAccountState userRatingData = UserAccountState(
+        id: seriesID,
+        favorite: favorite,
+        watchlist: watchlist,
+        ratedValue: ratedValue);
 
     return userRatingData;
   }
 
-  void showRatingDialog(BuildContext context, UserAccountState userAccountState) {
+  void showRatingDialog(
+      BuildContext context, UserAccountState userAccountState) {
     double rating = 0;
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           shadowColor: Color(0xff690257),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Rate This Movie',
             style: TextStyle(color: Colors.white, fontSize: 22),
@@ -439,8 +587,7 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
                         onRatingUpdate: (updatedRating) {
                           rating = updatedRating;
                         },
-                      )
-                  )
+                      ))
                 ],
               ),
             ],
@@ -496,7 +643,12 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
     );
 
     int movieId = id;
-    print('dialog: ' + movieId.toString() + ' ' + rating.toString() + ' ' + sessionId!);
+    print('dialog: ' +
+        movieId.toString() +
+        ' ' +
+        rating.toString() +
+        ' ' +
+        sessionId!);
 
     // Submit the rating
     try {
@@ -537,7 +689,8 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
 
     // Submit the rating
     try {
-      await tmdbWithCustLogs.v3.movies.deleteRating(movieId, sessionId: sessionId);
+      await tmdbWithCustLogs.v3.movies
+          .deleteRating(movieId, sessionId: sessionId);
 
       // Show a success message or perform any other action after successful rating
       ScaffoldMessenger.of(context).showSnackBar(
@@ -556,7 +709,6 @@ class _AllSimilarMoviesState extends State<AllMoviesScreen> {
 
     Navigator.of(context).pop();
   }
-
 
   Widget _buildShimmerPlaceholder() {
     return Shimmer.fromColors(

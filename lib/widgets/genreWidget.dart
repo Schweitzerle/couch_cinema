@@ -29,7 +29,6 @@ class GenreList extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) => AllMoviesScreen(
-                                movies: genres,
                                 title: genre['name'],
                                 appBarColor: Color(0xff540126),
                                 typeOfApiCall: 10,

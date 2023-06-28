@@ -93,9 +93,13 @@ class _AllSeriesState extends State<AllSeriesScreen> {
   }
 
   void _loadMovies() async {
-    final List<dynamic> initialMovies = await _fetchMoviesPage(currentPage);
+    final totalPages = await _fetchTotalPages();
+    final lastPage = _shouldLoadFromLastPage() ? totalPages: 1;
+
+    final List<dynamic> initialSeries = await _fetchMoviesPage(lastPage);
     setState(() {
-      allSeries.addAll(initialMovies);
+      allSeries.addAll(_shouldLoadFromLastPage() ? initialSeries.reversed : initialSeries);
+      currentPage = lastPage;
     });
   }
 
@@ -105,17 +109,52 @@ class _AllSeriesState extends State<AllSeriesScreen> {
         isLoadingMore = true;
       });
 
-      final nextPage = currentPage + 1;
-      final List<dynamic> nextMovies = await _fetchMoviesPage(nextPage);
+      final nextPage = _shouldLoadFromLastPage() ? currentPage - 1 : currentPage + 1;
+      final List<dynamic> nextSeries = await _fetchMoviesPage(nextPage);
 
       setState(() {
-        allSeries.addAll(nextMovies);
+        allSeries.addAll(_shouldLoadFromLastPage() ? nextSeries.reversed :nextSeries);
         currentPage = nextPage;
         isLoadingMore = false;
       });
     }
   }
 
+  bool _shouldLoadFromLastPage() {
+    return [7, 9].contains(widget.typeOfApiCall);
+  }
+
+  Future<int> _fetchTotalPages() async {
+    final String apiKey = '24b3f99aa424f62e2dd5452b83ad2e43';
+    final readAccToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyNGIzZjk5YWE0MjRmNjJlMmRkNTQ1MmI4M2FkMmU0MyIsInN1YiI6IjYzNjI3NmU5YTZhNGMxMDA4MmRhN2JiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.fiB3ZZLqxCWYrIvehaJyw6c4LzzOFwlqoLh8Dw77SUw';
+
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
+
+    int totalPages = 1;
+
+    switch (widget.typeOfApiCall) {
+      case 7:
+        final result = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
+          widget.sessionID!,
+          widget.accountID!,
+        );
+        totalPages = result['total_pages'];
+        break;
+      case 9:
+        final result = await tmdbWithCustLogs.v3.account.getFavoriteTvShows(
+          widget.sessionID!,
+          widget.accountID!,
+        );
+        totalPages = result['total_pages'];
+        break;
+    }
+
+    return totalPages;
+  }
 
 
   Future<List<dynamic>> _fetchMoviesPage(int page) async {

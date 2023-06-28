@@ -37,36 +37,171 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
     accountId = await accountID;
     sessionId = await sessionID;
 
-    TMDB tmdbWithCustLogs = TMDB(ApiKeys(apiKey, readAccToken),
-        logConfig: ConfigLogger(showLogs: true, showErrorLogs: true));
+    TMDB tmdbWithCustLogs = TMDB(
+      ApiKeys(apiKey, readAccToken),
+      logConfig: ConfigLogger(showLogs: true, showErrorLogs: true),
+    );
 
-      Map<dynamic, dynamic> watchlistSeriesResults = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
-        sessionId!,
-        accountId!,
-      );
+    int watchlistSeriesTotalPages = 1;
+    int watchlistMoviesTotalPages = 1;
+    int ratedMoviesTotalPages = 1;
+    int ratedSeriesTotalPages = 1;
 
-      Map<dynamic, dynamic> watchlistMoviesResults = await tmdbWithCustLogs.v3.account.getMovieWatchList(
-        sessionId!,
-        accountId!,
-      );
+    // Fetch the total number of pages for each API call
+    Map<dynamic, dynamic> watchlistSeriesInfo = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
+      sessionId!,
+      accountId!,
+      page: 1,
+    );
+    watchlistSeriesTotalPages = watchlistSeriesInfo['total_pages'];
 
-      Map<dynamic, dynamic> ratedMoviesResults = await tmdbWithCustLogs.v3.account.getRatedMovies(
-        sessionId!,
-        accountId!,
-      );
+    Map<dynamic, dynamic> watchlistMoviesInfo = await tmdbWithCustLogs.v3.account.getMovieWatchList(
+      sessionId!,
+      accountId!,
+      page: 1,
+    );
+    watchlistMoviesTotalPages = watchlistMoviesInfo['total_pages'];
 
-      Map<dynamic, dynamic> ratedSeriesResults = await tmdbWithCustLogs.v3.account.getRatedTvShows(
-        sessionId!,
-        accountId!,
-      );
+    Map<dynamic, dynamic> ratedMoviesInfo = await tmdbWithCustLogs.v3.account.getRatedMovies(
+      sessionId!,
+      accountId!,
+      page: 1,
+    );
+    ratedMoviesTotalPages = ratedMoviesInfo['total_pages'];
+
+    Map<dynamic, dynamic> ratedSeriesInfo = await tmdbWithCustLogs.v3.account.getRatedTvShows(
+      sessionId!,
+      accountId!,
+      page: 1,
+    );
+    ratedSeriesTotalPages = ratedSeriesInfo['total_pages'];
+
+    // Fetch the last two pages for each API call
+    List<Map<dynamic, dynamic>> watchlistSeriesPages = [];
+    List<Map<dynamic, dynamic>> watchlistMoviesPages = [];
+    List<Map<dynamic, dynamic>> ratedMoviesPages = [];
+    List<Map<dynamic, dynamic>> ratedSeriesPages = [];
+
+
+    if (watchlistSeriesTotalPages >= 1) {
+      int lastPage = watchlistSeriesTotalPages;
+      if (lastPage > 0 && lastPage <= 1000) {
+        Map<dynamic, dynamic> watchlistSeriesResultsLast = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
+          sessionId!,
+          accountId!,
+          page: lastPage,
+        );
+        watchlistSeriesPages.add(watchlistSeriesResultsLast);
+      }
+      int secondLastPage = watchlistSeriesTotalPages - 1;
+      if (secondLastPage > 0 && secondLastPage <= 1000) {
+        Map<dynamic, dynamic> watchlistSeriesResultsSecondLast = await tmdbWithCustLogs.v3.account.getTvShowWatchList(
+          sessionId!,
+          accountId!,
+          page: secondLastPage,
+        );
+        watchlistSeriesPages.add(watchlistSeriesResultsSecondLast);
+      }
+    }
+
+
+    if (watchlistMoviesTotalPages >= 1) {
+      int lastPage = watchlistMoviesTotalPages;
+      if (lastPage > 0 && lastPage <= 1000) {
+        Map<dynamic, dynamic> watchlistMoviesResultsLast = await tmdbWithCustLogs.v3.account.getMovieWatchList(
+          sessionId!,
+          accountId!,
+          page: lastPage,
+        );
+        watchlistMoviesPages.add(watchlistMoviesResultsLast);
+      }
+      int secondLastPage = watchlistMoviesTotalPages - 1;
+      if (secondLastPage > 0 && secondLastPage <= 1000) {
+        Map<dynamic, dynamic> watchlistMoviesResultsSecondLast = await tmdbWithCustLogs.v3.account.getMovieWatchList(
+          sessionId!,
+          accountId!,
+          page: secondLastPage,
+        );
+        watchlistMoviesPages.add(watchlistMoviesResultsSecondLast);
+      }
+    }
+
+    if (ratedSeriesTotalPages >= 1) {
+      int lastPage = ratedSeriesTotalPages;
+      if (lastPage > 0 && lastPage <= 1000) {
+        Map<dynamic, dynamic> ratedSeriesResultsLast = await tmdbWithCustLogs.v3.account.getRatedTvShows(
+          sessionId!,
+          accountId!,
+          page: lastPage,
+        );
+        ratedSeriesPages.add(ratedSeriesResultsLast);
+      }
+      int secondLastPage = ratedSeriesTotalPages - 1;
+      if (secondLastPage > 0 && secondLastPage <= 1000) {
+        Map<dynamic, dynamic> ratedSeriesResultsSecondLast = await tmdbWithCustLogs.v3.account.getRatedTvShows(
+          sessionId!,
+          accountId!,
+          page: secondLastPage,
+        );
+        ratedSeriesPages.add(ratedSeriesResultsSecondLast);
+      }
+    }
+
+
+    if (ratedMoviesTotalPages >= 1) {
+      int lastPage = ratedMoviesTotalPages;
+      if (lastPage > 0 && lastPage <= 1000) {
+        Map<dynamic, dynamic> ratedMoviesResultsLast = await tmdbWithCustLogs.v3.account.getRatedMovies(
+          sessionId!,
+          accountId!,
+          page: lastPage,
+        );
+        ratedMoviesPages.add(ratedMoviesResultsLast);
+      }
+      int secondLastPage = ratedMoviesTotalPages - 1;
+      if (secondLastPage > 0 && secondLastPage <= 1000) {
+        Map<dynamic, dynamic> ratedMoviesResultsSecondLast = await tmdbWithCustLogs.v3.account.getRatedMovies(
+          sessionId!,
+          accountId!,
+          page: secondLastPage,
+        );
+        ratedMoviesPages.add(ratedMoviesResultsSecondLast);
+      }
+    }
+
+
+
+    // Combine the results and reverse the items of each page
+    List<dynamic> reversedWatchlistMovies = [];
+    for (var i = 0; i < watchlistMoviesPages.length; i++) {
+      reversedWatchlistMovies.addAll(watchlistMoviesPages[i]['results'].reversed);
+    }
+
+    List<dynamic> reversedWatchlistSeries = [];
+    for (var i = 0; i < watchlistSeriesPages.length; i++) {
+      reversedWatchlistSeries.addAll(watchlistSeriesPages[i]['results'].reversed);
+    }
+
+    List<dynamic> reversedRatedMovies = [];
+    for (var i = 0; i < ratedMoviesPages.length; i++) {
+      reversedRatedMovies.addAll(ratedMoviesPages[i]['results'].reversed);
+    }
+
+    List<dynamic> reversedRatedSeries = [];
+    for (var i = 0; i < ratedSeriesPages.length; i++) {
+      reversedRatedSeries.addAll(ratedSeriesPages[i]['results'].reversed);
+    }
+
 
     setState(() {
-      watchlistMovies =  watchlistMoviesResults['results'].reversed.toList();
-      watchlistSeries = watchlistSeriesResults['results'].reversed.toList();
-      ratedMovies = ratedMoviesResults['results'].reversed.toList();
-      ratedSeries = ratedSeriesResults['results'].reversed.toList();
+      watchlistMovies = reversedWatchlistMovies;
+      watchlistSeries = reversedWatchlistSeries;
+      ratedMovies = reversedRatedMovies;
+      ratedSeries = reversedRatedSeries;
     });
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -94,14 +229,15 @@ class _WatchlistScreenState extends State<WatchlistScreen> with SingleTickerProv
                 children: [
                   ListView(
                     children: [
-                      MoviesScreen(movies: watchlistMovies, allMovies: watchlistMovies, title: 'Watchlist Movies', buttonColor: Color(0xffd6069b), typeOfApiCall: 7, accountID: accountId, sessionID:  sessionId,),
-                      SeriesScreen(series: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allSeries: watchlistSeries, title: 'Watchlist Series', buttonColor: Color(0xffd6069b), typeOfApiCall: 7, accountID: accountId, sessionID: sessionId,),
+                      watchlistMovies.isNotEmpty ?
+                      MoviesScreen(movies: watchlistMovies.length < 10 ? watchlistMovies: watchlistMovies.sublist(0, 10), allMovies: watchlistMovies, title: 'Watchlist Movies', buttonColor: Color(0xffd6069b), typeOfApiCall: 7, accountID: accountId, sessionID:  sessionId,) : Container(),
+                      watchlistSeries.isNotEmpty ? SeriesScreen(series: watchlistSeries.length < 10 ? watchlistSeries: watchlistSeries.sublist(0, 10), allSeries: watchlistSeries, title: 'Watchlist Series', buttonColor: Color(0xffd6069b), typeOfApiCall: 7, accountID: accountId, sessionID: sessionId,) : Container(),
                     ],
                   ),
                   ListView(
                     children: [
-                      RatedMovies(ratedMovies: ratedMovies, allRatedMovies: ratedMovies, buttonColor: Color(0xffd6069b), accountID: accountId, sessionID: sessionId,),
-                      RatedSeries(ratedSeries: ratedSeries, allRatedSeries: ratedSeries, buttonColor: Color(0xffd6069b), accountID: accountId, sessionID: sessionId,),
+                      ratedMovies.isNotEmpty ? RatedMovies(ratedMovies: ratedMovies.length < 10 ? ratedMovies : ratedMovies.sublist(0, 10), allRatedMovies: ratedMovies, buttonColor: Color(0xffd6069b), accountID: accountId, sessionID: sessionId,) : Container(),
+                      ratedSeries.isNotEmpty ? RatedSeries(ratedSeries: ratedSeries.length < 10 ? ratedSeries : ratedSeries.sublist(0, 10), allRatedSeries: ratedSeries, buttonColor: Color(0xffd6069b), accountID: accountId, sessionID: sessionId,) : Container(),
                     ],
                   ),
                 ],
