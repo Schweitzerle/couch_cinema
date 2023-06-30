@@ -63,6 +63,7 @@ dependencies:
   icons_launcher: ^2.1.2
   ionicons: ^0.2.2
   line_icons: ^2.0.1
+  syncfusion_flutter_sliders: ^22.1.36
 
 dev_dependencies:
   flutter_test:

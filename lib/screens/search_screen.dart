@@ -227,7 +227,7 @@ class _FilmSearchScreenState extends State<FilmSearchScreen> {
               ],
             ),
             Container(
-              child: FiltersScreen()
+              child: MovieFilterWidget()
               ),
           ],
         ),

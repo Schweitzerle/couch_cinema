@@ -754,6 +754,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  syncfusion_flutter_core:
+    dependency: transitive
+    description:
+      name: syncfusion_flutter_core
+      sha256: cd99c16c22658fce7ef036af5e72125428c53b8b58110ef01593b1e17891b68a
+      url: "https://pub.dev"
+    source: hosted
+    version: "22.1.36"
+  syncfusion_flutter_sliders:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_sliders
+      sha256: "86c4171e8fff78d9e0565ad77d61328d3093f2c40236e3f0e722f73cd1acbaf5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "22.1.36"
   synchronized:
     dependency: transitive
     description:
